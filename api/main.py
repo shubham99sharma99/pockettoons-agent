@@ -205,6 +205,25 @@ def eval_results():
     return data
 
 
+@app.get("/eval/questions")
+def eval_questions():
+    """Golden questions with reference SQL, for checking the agent by hand on the SQL page.
+
+    Off unless PT_EXPOSE_GOLDEN=1 (local use): this is the eval answer key, so a public
+    deployment should not serve it. The agent never calls the API, so this is not a leak to it.
+    """
+    if os.environ.get("PT_EXPOSE_GOLDEN") != "1":
+        raise HTTPException(404, "Golden questions are not exposed. Set PT_EXPOSE_GOLDEN=1 in .env (local only).")
+    import yaml
+    qs = yaml.safe_load((ROOT / "eval" / "questions.yaml").read_text())["questions"]
+    return {"questions": [
+        {"id": q["id"], "category": q.get("category"), "question": q["question"],
+         "sql": ((q.get("numeric") or {}).get("sql") or "").strip() or None,
+         "tol": (q.get("numeric") or {}).get("tol"),
+         "facts": q.get("facts") or {}, "rubric": (q.get("judge") or "").strip() or None}
+        for q in qs]}
+
+
 @app.get("/eval/status")
 def eval_status():
     return _eval_state
