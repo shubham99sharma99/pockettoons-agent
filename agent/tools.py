@@ -406,7 +406,7 @@ TOOL_SPECS = [
            "confidence": {"type": "string", "enum": CONFIDENCE},
            "query_ids": {"type": "array", "items": {"type": "string"}}},
           ["id", "statement", "verdict"]),
-    _spec("submit_answer", "Submit the final answer. Call exactly once, at the end. answer_markdown follows the required output format; headline is the one-sentence answer; headline_value is the single main number if the question asks for one (as a plain number: 0.085 for 8.5%, 12345.6 for $12,345.60), else null.",
+    _spec("submit_answer", "Submit the final answer. Call exactly once, at the end. answer_markdown follows the required output format; headline is the one-sentence answer; headline_value is the single main number if the question asks for one (as a plain, signed number: 0.085 for 8.5%, -0.283 for a 28.3% decline, 12345.6 for $12,345.60), else null.",
           {"answer_markdown": {"type": "string"}, "headline": {"type": "string"},
            "headline_value": {"type": ["number", "null"]}, "unit": {"type": "string"},
            "confidence": {"type": "string", "enum": CONFIDENCE},

@@ -110,17 +110,25 @@ def parse_verdict(text: str) -> dict:
     ft = v.get("failure_type")
     return {"pass": v["pass"], "score": max(0, min(10, score)),
             "failure_type": ft if ft in FAILURE_TYPES else ("none" if v["pass"] else "other"),
-            "rationale": str(v.get("rationale", ""))[:2000]}
+            "rationale": str(v.get("rationale") or v.get("reason") or "")[:2000]}
 
 
-def _judge_nim(prompt: str, client=None) -> dict:
+def _judge_nim(prompt: str, client=None, attempts: int = 3) -> dict:
+    """Free-tier judges sometimes return empty content (reasoning used the token budget) or
+    malformed JSON; ask again up to `attempts` times before reporting a judge_error."""
     from agent.nim import NimLLM
-    llm = NimLLM(model=JUDGE_MODEL, max_tokens=1500, temperature=0.0, client=client)
+    llm = NimLLM(model=JUDGE_MODEL, max_tokens=4000, temperature=0.0, client=client)
     schema_hint = (f"Reply with only a JSON object, no prose, with keys: pass (boolean), score (integer 0-10), "
                    f"failure_type (one of {', '.join(FAILURE_TYPES)}), rationale (string).")
-    resp = llm.complete([{"role": "system", "content": JUDGE_SYSTEM + "\n\n" + schema_hint},
-                         {"role": "user", "content": prompt}])
-    return parse_verdict(resp.choices[0].message.content or "")
+    err: Exception | None = None
+    for _ in range(attempts):
+        resp = llm.complete([{"role": "system", "content": JUDGE_SYSTEM + "\n\n" + schema_hint},
+                             {"role": "user", "content": prompt}])
+        try:
+            return parse_verdict(resp.choices[0].message.content or "")
+        except ValueError as e:   # json.JSONDecodeError is a ValueError
+            err = e
+    raise err  # type: ignore[misc]
 
 
 def judge(question: str, rubric: str, facts: dict | None, answer_md: str, client=None) -> dict:

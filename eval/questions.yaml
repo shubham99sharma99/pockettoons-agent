@@ -110,7 +110,7 @@ questions:
         FROM transactions WHERE type = 'ppv' AND status = 'success' AND amount_usd = 1.99
     judge: >
       Pass if the direction and size match and the answer separates unlocks from
-      premium purchases (unlocks fell sharply, premium roughly flat). Stating only the
+      premium purchases (unlocks fell sharply, premium grew; see the reference facts). Stating only the
       total without the split is a partial (fail if it misattributes the cause).
 
   - id: E09

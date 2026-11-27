@@ -86,3 +86,24 @@ def test_infrastructure_failures_are_not_blamed_on_the_agent():
     assert slow["failure_type"] == "loop_or_timeout"
     s = run_eval.summarise([api, jfail, slow])
     assert s["infra_failures"] == 2 and "Warning" in run_eval.to_markdown(s)
+
+
+def test_rejudge_rescores_stored_answers_without_the_agent(monkeypatch, tmp_path):
+    import json
+    q = {"id": "R1", "category": "simple", "question": "q", "judge": "rubric"}
+    monkeypatch.setattr(run_eval.GT, "load_questions", lambda: [q])
+    monkeypatch.setattr(run_eval.GT, "build", lambda: {"questions": {"R1": {}}})
+    stored = [{"id": "R1", "pass": False, "failure_type": "judge_error", "headline": "h",
+               "answer_markdown": "a (Q1)", "agent": {"stop": "submitted", "tool_calls": 2}}]
+    src = tmp_path / "partial.json"
+    src.write_text(json.dumps(stored))
+    s = run_eval.rejudge(src, judge_fn=lambda *a: {"pass": True, "score": 9, "failure_type": "none", "rationale": ""})
+    assert s["passed"] == 1 and s["results"][0]["agent"]["tool_calls"] == 2
+
+
+def test_nim_judge_retries_malformed_replies():
+    from types import SimpleNamespace as NS
+    replies = iter(["", '{"pass": tru', '{"pass": false, "failure_type": "wrong_number", "reason": "off"}'])
+    fake = NS(chat=NS(completions=NS(create=lambda **k: NS(choices=[NS(message=NS(content=next(replies)))]))))
+    v = scoring._judge_nim("p", client=fake)
+    assert v["failure_type"] == "wrong_number" and v["rationale"] == "off"

@@ -3,6 +3,8 @@
     python -m eval.run_eval                  # all questions
     python -m eval.run_eval --ids E01 E17    # a subset
     python -m eval.run_eval --concurrency 4
+    python -m eval.run_eval --resume         # continue an interrupted run
+    python -m eval.run_eval --rejudge eval/results/latest.json   # re-score stored answers only
 
 Writes eval/results/run_<timestamp>.json, eval/results/latest.json and
 eval/results.md (pass/fail table + failure analysis). Requires ANTHROPIC_API_KEY
@@ -124,6 +126,27 @@ def run(ids: list[str] | None, concurrency: int, agent_factory=None, judge_fn=sc
     return summarise([done[i] for i in order if i in done])
 
 
+def rejudge(source: Path, ids: list[str] | None = None, judge_fn=scoring.judge) -> dict:
+    """Re-score stored answers (numeric check and judge) without re-running the agent.
+    Use after a judge outage or a rubric fix; the agent's answers are untouched."""
+    rows = json.loads(source.read_text())
+    rows = rows["results"] if isinstance(rows, dict) else rows
+    questions = {q["id"]: q for q in GT.load_questions()}
+    gt = GT.build()
+    out = []
+    for r in rows:
+        if r["id"] not in questions or (ids and r["id"] not in ids):
+            out.append(r)
+            continue
+        ans = None if r.get("answer_markdown") is None and r.get("headline") is None else {
+            k: r.get(k) for k in ("headline", "headline_value", "answer_markdown")}
+        new = score_one(questions[r["id"]], gt, {"answer": ans, **(r.get("agent") or {})}, judge_fn)
+        new["wall_s"] = r.get("wall_s")
+        print(f"{r['id']} {'PASS' if new['pass'] else 'FAIL'} ({new['failure_type']})", flush=True)
+        out.append(new)
+    return summarise(out)
+
+
 def summarise(rows: list[dict]) -> dict:
     from agent.agent import DEFAULT_MODEL, PROVIDER
     n = len(rows)
@@ -207,7 +230,13 @@ def main(argv=None):
     ap.add_argument("--concurrency", type=int, default=3)
     ap.add_argument("--resume", action="store_true",
                     help="skip questions already scored in eval/results/partial.json")
+    ap.add_argument("--rejudge", metavar="RESULTS_JSON", type=Path,
+                    help="re-score stored answers from a run_*.json / partial.json without re-running the agent")
     a = ap.parse_args(argv)
+    if a.rejudge:
+        p = save(rejudge(a.rejudge, a.ids))
+        print(f"Re-scored. Wrote {p} and eval/results.md")
+        return
     summary = run(a.ids, a.concurrency, resume=a.resume)
     p = save(summary)
     PARTIAL.unlink(missing_ok=True)
