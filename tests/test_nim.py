@@ -183,3 +183,10 @@ def test_rate_limit_backs_off_then_gives_up(monkeypatch):
                    sleep=lambda s: pytest.fail("must not retry non-429 errors"))
     with pytest.raises(BadRequest):
         other.complete([])
+
+
+def test_single_offered_tool_is_forced():
+    fake = FakeOpenAI([completion("ok")])
+    sub = [t for t in TOOL_SPECS if t["name"] == "submit_answer"]
+    NimLLM(model="m", client=fake).step("S", [{"role": "user", "content": "q"}], sub, lambda t: None)
+    assert fake.requests[0]["tool_choice"] == {"type": "function", "function": {"name": "submit_answer"}}

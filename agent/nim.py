@@ -137,8 +137,11 @@ class NimLLM:
                 delay = min(delay * 2, 240.0)
 
     def step(self, system, messages, tools, on_text):
+        # When the loop offers a single tool (wrap-up: only submit_answer), require it; some
+        # open models otherwise keep replying in prose until the turn limit.
+        choice = ({"type": "function", "function": {"name": tools[0]["name"]}} if len(tools) == 1 else "auto")
         resp = self.complete(to_openai_messages(system, messages),
-                             tools=to_openai_tools(tools), tool_choice="auto")
+                             tools=to_openai_tools(tools), tool_choice=choice)
         out = from_openai_response(resp)
         for b in out.content:
             if b["type"] == "text":
