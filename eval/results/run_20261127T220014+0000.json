@@ -1,0 +1,55 @@
+{
+  "run_at": "2026-11-27T22:00:14+00:00",
+  "model": "nvidia/nemotron-3-ultra-550b-a55b",
+  "provider": "nim",
+  "judge_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "n": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "by_category": {
+    "cohort": {
+      "n": 1,
+      "pass": 1
+    }
+  },
+  "failure_types": {},
+  "infra_failures": 0,
+  "median_latency_s": 119.22,
+  "median_tool_calls": 11,
+  "median_input_tokens": 99159,
+  "median_output_tokens": 4441,
+  "results": [
+    {
+      "id": "E12",
+      "category": "cohort",
+      "question": "What was the cost per paying user by channel for Q2 signups?",
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer reports cost per paying user by paid channel using the 30-day payer window, and the figures ($33.10 google_ads, $37.24 meta_ads, $37.60 tiktok_ads, $40.56 influencer) match the reference facts exactly. It states the payer definition (successful subscription or PPV transaction within 30 days of signup) and notes that recent November cohorts have had less time to pay, so payer counts are lower bounds and cost per payer is an upper bound. It also contrasts with CPI: tiktok_ads has the cheapest installs (CPI 3.65) but is not the cheapest per payer, while google_ads/meta_ads have higher CPI yet lower cost per payer due to higher payer rates. All rubric conditions are satisfied."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 11,
+        "sql_calls": 8,
+        "turns": 11,
+        "latency_s": 119.22,
+        "usage": {
+          "input_tokens": 99159,
+          "output_tokens": 4441,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "Cost per paying user (30-day) for Q2 signups: google_ads $33.10, meta_ads $37.24, tiktok_ads $37.60, influencer $40.56; organic/referral $0",
+      "headline_value": 33.1,
+      "answer_markdown": "**Answer:** For Q2 (Sep\u2013Nov 2026) signups, cost per paying user within 30 days of signup by paid channel was: google_ads $33.10, meta_ads $37.24, tiktok_ads $37.60, influencer $40.56. Organic and referral channels had no marketing spend, so their cost per payer is $0. (Q5)\n\n**How I measured it:**\n- **Cohort:** Users with `signup_date` between 2026-09-01 and 2026-11-30 (Q2 per the metric catalog).\n- **Paying user:** A user from that cohort with at least one successful `subscription` or `ppv` transaction within 30 days of their signup date (per the `cost_per_payer` definition in the catalog).\n- **Spend:** Sum of `marketing_spend.spend_usd` for the same channel and date range (Sep\u2013Nov 2026).\n- **Cost per paying user:** `marketing_spend_usd / paying_users_30d` per channel.\n- **Channels:** Paid channels (`meta_ads`, `google_ads`, `tiktok_ads`, `influencer`) match between `users.acquisition_source` and `marketing_spend.channel`. Organic and referral have no spend rows.\n\n**Checks:**\n- Verified date ranges: users span Dec 2025\u2013Nov 2026 (Q1); marketing_spend and transactions cover Jun\u2013Nov 2026 (Q5, Q2, Q4).\n- Acquisition sources in users match marketing_spend channels (Q3).\n- Payer rates by channel are consistent with cost-per-payer ranking: google_ads and meta_ads have the highest 30-day payer rates (~19.8%), which drives their lower cost per payer despite higher CPI (Q7, Q6).\n- **Cohort maturity:** 9,101 Q2 signups occurred in November; their 30-day windows extend beyond the data cutoff (2026-11-30). Their payer counts and cost-per-payer will improve as more conversions are observed. This affects all channels proportionally to their November signup share.\n\n**Confidence:** Medium. The calculation follows the catalog definition exactly, but the November cohort is immature\u2014reported payer counts are lower bounds, so cost per payer is an upper bound for those users.",
+      "wall_s": 136.0
+    }
+  ]
+}

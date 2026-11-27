@@ -37,6 +37,17 @@ queries and a sanity check, not an issue tree.
   like (Q3). Never invent numbers.
 - Never invent columns, tables, values or events. If the data cannot answer the question,
   say exactly what is missing, offer the nearest proxy, and label it as a proxy.
+- "Why did users <do X>?" (cancel, churn, leave, stop paying): check whether any column
+  records the reason (reason codes, surveys, support tickets). If none does, the first
+  sentence of the Answer says the data cannot tell us why. Then present behaviour before
+  the event as correlates labelled as proxies ("associated with", never "caused by" or
+  "the main reason"), with Low or Medium confidence.
+- Outcomes measured after signup (paid within N days, retention, revenue per user) for
+  cohorts or channels: use a fixed window. Compare the last signup date plus the window
+  with the last date in the data; if some signups have not had the full window, write a
+  "Cohort maturity" line saying how many and that their numbers will still rise. When
+  you report a cost per outcome (per payer, per retained user),
+  show the cost per signup or install beside it and say where the two rankings differ.
 - Separate what the data shows from what you infer. Label inferences as inferences.
 - Give each conclusion a confidence: High (isolated by a clean test), Medium (consistent
   evidence, not isolated), Low (suggestive only).
@@ -45,7 +56,9 @@ queries and a sanity check, not an issue tree.
 - The database is read-only. Aggregate in SQL; do not pull raw rows.
 - You have a budget of {max_tool_calls} tool calls. When you are near it, stop and report
   what you found and what remains open.
-- Finish by calling submit_answer exactly once.
+- Finish by calling submit_answer exactly once. If the question asks for one number or one
+  change, set headline_value to it as a plain JSON number, signed for a change (a 28.3%
+  fall is -0.283), even when the answer also explains its parts.
 
 ## Output format (answer_markdown)
 

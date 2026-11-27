@@ -1,11 +1,11 @@
 {
-  "run_at": "2026-11-27T18:55:41+00:00",
+  "run_at": "2026-11-27T22:00:34+00:00",
   "model": "nvidia/nemotron-3-ultra-550b-a55b",
   "provider": "nim",
   "judge_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
   "n": 21,
-  "passed": 18,
-  "pass_rate": 0.857,
+  "passed": 21,
+  "pass_rate": 1.0,
   "by_category": {
     "simple": {
       "n": 3,
@@ -17,11 +17,11 @@
     },
     "time": {
       "n": 3,
-      "pass": 2
+      "pass": 3
     },
     "cohort": {
       "n": 3,
-      "pass": 2
+      "pass": 3
     },
     "ambiguous": {
       "n": 2,
@@ -29,7 +29,7 @@
     },
     "unanswerable": {
       "n": 2,
-      "pass": 1
+      "pass": 2
     },
     "dq_trap": {
       "n": 3,
@@ -44,16 +44,12 @@
       "pass": 1
     }
   },
-  "failure_types": {
-    "wrong_number": 1,
-    "did_not_state_assumption": 1,
-    "overclaimed_causality": 1
-  },
+  "failure_types": {},
   "infra_failures": 0,
-  "median_latency_s": 320.75,
-  "median_tool_calls": 15,
-  "median_input_tokens": 157301,
-  "median_output_tokens": 11261,
+  "median_latency_s": 177.59,
+  "median_tool_calls": 13,
+  "median_input_tokens": 99159,
+  "median_output_tokens": 5068,
   "results": [
     {
       "id": "E01",
@@ -360,15 +356,15 @@
       "category": "time",
       "question": "How did PPV revenue change from Q1 to Q2?",
       "numeric": {
-        "pass": false,
+        "pass": true,
         "truth": -0.28335955359367737,
         "candidates": [
+          -0.283,
           0.28300000000000003,
-          11.8,
-          8.4,
           1.0,
+          11785.0,
           2.0,
-          6.9
+          8445.0
         ],
         "tol": {
           "abs": 0.01
@@ -378,29 +374,29 @@
         "pass": true,
         "score": 10,
         "failure_type": "none",
-        "rationale": "The answer states the overall PPV revenue direction (gross fell ~28.3%) and, crucially, separates the two components required by the rubric: unlocks/standard-tier fell sharply (about -64%) while premium grew (about +19%). These match the reference facts (unlock_change \u2248 -0.6438; premium_change \u2248 +0.1913) in both direction and size. It does not state only the total, nor does it misattribute the cause; it correctly frames the decline as driven by the unlock/standard drop partially offset by premium growth. The Q1/Q2 split (pre/post 2026-09-01) aligns with the reference facts' date filter."
+        "rationale": "The answer matches the reference facts: total PPV revenue fell about 28.3% (reference_headline_value -0.2834), and it correctly splits the driver \u2014 unlocks fell sharply (reference unlock_change -0.6438) while premium grew (reference premium_change +0.1913). It states the total with the required split and does not misattribute the cause."
       },
-      "pass": false,
-      "failure_type": "wrong_number",
+      "pass": true,
+      "failure_type": "none",
       "agent": {
         "stop": "submitted",
         "submitted": true,
-        "tool_calls": 16,
-        "sql_calls": 9,
-        "turns": 16,
-        "latency_s": 439.77,
+        "tool_calls": 8,
+        "sql_calls": 4,
+        "turns": 8,
+        "latency_s": 102.12,
         "usage": {
-          "input_tokens": 157301,
-          "output_tokens": 11261,
+          "input_tokens": 73527,
+          "output_tokens": 2988,
           "cache_read_input_tokens": 0,
           "cache_creation_input_tokens": 0
         },
         "error": null
       },
-      "headline": "Gross PPV revenue fell 28.3% ($11.8k \u2192 $8.4k) from Q1 to Q2; net PPV revenue was flat (~$6.9k) but distorted by a refund sign bug.",
-      "headline_value": null,
-      "answer_markdown": "**Answer:** Gross PPV revenue fell 28.3% from $11,785 in Q1 (Jun\u2013Aug) to $8,445 in Q2 (Sep\u2013Nov), while net PPV revenue (after refunds) was essentially flat at ~$6,880 vs ~$6,920. (Q2, Q17)\n\n## What the numbers say\n| Metric | Q1 (Jun\u2013Aug) | Q2 (Sep\u2013Nov) | Change |\n|--------|--------------|--------------|--------|\n| Gross PPV revenue | $11,784.78 | $8,445.45 | \u201328.3% |\n| PPV transactions | 9,322 | 5,455 | \u201341.5% |\n| Refunds (PPV-related) | \u2013$4,903.30 | \u2013$1,523.66 | \u201369% |\n| **Net PPV revenue** | **$6,881.48** | **$6,921.79** | **+0.6%** |\n| Avg revenue / PPV txn | $1.26 | $1.55 | +23% |\n\n## Root causes\n| Cause | What changed | Evidence | Impact | Confidence |\n|-------|--------------|----------|--------|------------|\n| Volume drop | PPV transactions fell 41.5% (9,322 \u2192 5,455) | Q2, Q14 | \u2013$4.9k gross | High |\n| Mix shift to Premium | Standard-tier PPV views \u201364% (6,754 \u2192 2,405); Premium-tier PPV views +19% (2,555 \u2192 3,039) | Q15 | Partially offsets volume drop (Premium is $1.99 vs $0.99) | High |\n| Refund anomaly in Q1 | Q1 refunds were 3.2\u00d7 Q2; DQ check shows google_play refunds in Oct\u2013Nov stored as positive (wrong sign), which would understate Q2 refunds | Q6, Q17 | Makes Q1 net look worse / Q2 net look better than reality | Medium |\n\n## Bridge (gross PPV revenue, $)\n| Step | Points | Cause |\n|------|--------|-------|\n| Q1 gross | 11,785 | \u2014 |\n| Volume (txn count \u201341.5%) | \u20134,895 | Fewer PPV purchases |\n| Mix (Premium share \u2191) | +1,556 | Higher $/txn ($1.26 \u2192 $1.55) |\n| Q2 gross | 8,445 | \u2014 |\n\n## Ruled out\n- Price change: list prices are fixed at $0.99 (standard) and $1.99 (premium) (Q7)\n- Seasonality in refunds: the sharp Q1\u2192Q2 refund drop coincides with a known sign-convention bug for google_play refunds in Oct\u2013Nov (Q6)\n\n## Data issues found\n- **Refund sign bug**: google_play refunds in Oct\u2013Nov 2026 are stored as positive amounts (Q6). This understates Q2 refunds by ~$200\u2013300 (estimated from 234 refunds \u00d7 ~$1), making Q2 net PPV revenue appear ~3\u20134% higher than reality.\n\n## Recommendations\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| Fix refund sign convention for google_play | Engineering / Finance | Accurate net revenue reporting; avoids overstating Q2 by ~$200\u2013300 | Refund amount_usd < 0 for all payment_methods (DQ check passes) |\n| Investigate Standard-tier PPV volume collapse | Product / Growth | Standard PPV is the larger volume driver; 64% drop needs diagnosis (paywall UI, free-episode limit changes, content mix) | Standard PPV views / MAU by month |\n| Monitor Premium-tier PPV growth | Product | Premium PPV grew 19% in views and 13% in revenue despite overall decline | Premium PPV revenue trend |\n\n## Caveats and open questions\n- Net PPV revenue comparison is distorted by the refund sign bug; true Q2 net is likely ~$6,600\u20136,700 (still roughly flat vs Q1).\n- The analysis covers Jun\u2013Nov 2026 (the available data window). Calendar Q1/Q2 would be Jan\u2013Mar / Apr\u2013Jun; this answer uses the data's first and second 3-month blocks.\n- No data on *why* Standard PPV views collapsed (e.g., free-episode limit changes, content releases, paywall experiments).",
-      "wall_s": 473.9
+      "headline": "PPV revenue declined 28.3% from Q1 ($11,785) to Q2 ($8,445), driven by a collapse in $0.99 standard-tier unlocks starting in September.",
+      "headline_value": -0.283,
+      "answer_markdown": "**Answer:** PPV revenue fell 28.3% from Q1 to Q2, dropping from $11,785 to $8,445 (a decline of $3,339). The decline was driven by a sharp drop in $0.99 standard-tier unlocks starting in September, while $1.99 premium-tier PPV charges held steady or grew slightly. (Q2)\n\n**How I measured it:**\n- **Metric:** PPV revenue = sum of `amount_usd` from `transactions` where `status = 'success'` and `type = 'ppv'`.\n- **Quarters:** Per the metric catalog, Q1 = Jun\u2013Aug 2026, Q2 = Sep\u2013Nov 2026 (the two quarters of the 6-month data window).\n- **Filters:** Successful PPV charges only; refunds excluded (they are separate `type = 'refund'` rows).\n\n**Checks:**\n- Data-quality checks on `transactions` (Q3\u2013Q10): no nulls, no duplicate PKs, full date coverage (183/183 days), no orphan user_ids.\n- **Sign convention:** Refunds on `google_play` in Oct\u2013Nov are stored as positive (violating the documented convention), but this does not affect PPV revenue because we only sum successful PPV charges, which are all positive as expected (Q6).\n- **Duplicate charges:** 121 duplicate charge pairs within 5 minutes across the window (~0.4% of successful charges), immaterial for this aggregate (Q8).\n\n**Confidence:** High. The numbers come directly from the transaction ledger with clean filters; the quarterly definition matches the catalog; the only data-quality issue (refund sign on google_play) does not touch the PPV charge rows used here.",
+      "wall_s": 144.6
     },
     {
       "id": "E09",
@@ -503,32 +499,32 @@
       "category": "cohort",
       "question": "What was the cost per paying user by channel for Q2 signups?",
       "judge": {
-        "pass": false,
-        "score": 5,
-        "failure_type": "did_not_state_assumption",
-        "rationale": "The cost-per-payer numbers match the reference facts for the 30-day payer window (Google $33.10, Meta $37.24, TikTok $37.60, Influencer $40.56) and the payer definition is stated. However, the answer does not contrast cost per payer with CPI (the cheapest install channel, TikTok, is not the cheapest per payer) and does not note that recent cohorts have had less time to pay, both of which are required by the rubric."
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer reports cost per paying user by paid channel using the 30-day payer window, and the figures ($33.10 google_ads, $37.24 meta_ads, $37.60 tiktok_ads, $40.56 influencer) match the reference facts exactly. It states the payer definition (successful subscription or PPV transaction within 30 days of signup) and notes that recent November cohorts have had less time to pay, so payer counts are lower bounds and cost per payer is an upper bound. It also contrasts with CPI: tiktok_ads has the cheapest installs (CPI 3.65) but is not the cheapest per payer, while google_ads/meta_ads have higher CPI yet lower cost per payer due to higher payer rates. All rubric conditions are satisfied."
       },
-      "pass": false,
-      "failure_type": "did_not_state_assumption",
+      "pass": true,
+      "failure_type": "none",
       "agent": {
-        "stop": "end_turn",
-        "submitted": false,
-        "tool_calls": 7,
-        "sql_calls": 4,
-        "turns": 7,
-        "latency_s": 87.2,
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 11,
+        "sql_calls": 8,
+        "turns": 11,
+        "latency_s": 119.22,
         "usage": {
-          "input_tokens": 57759,
-          "output_tokens": 2176,
+          "input_tokens": 99159,
+          "output_tokens": 4441,
           "cache_read_input_tokens": 0,
           "cache_creation_input_tokens": 0
         },
         "error": null
       },
-      "headline": "**Answer:** For Q2 (Sep\u2013Nov 2026) signups, cost per paying user (within 30 days of signup) by paid channel: TikTok Ads $37.60, Influencer $40.56, Meta Ads $37.24, Google Ads $33.10. Organic and Referral have no paid spend (cost = $0). (Q2, Q3, Q4)",
-      "headline_value": null,
-      "answer_markdown": "**Answer:** For Q2 (Sep\u2013Nov 2026) signups, cost per paying user (within 30 days of signup) by paid channel: TikTok Ads $37.60, Influencer $40.56, Meta Ads $37.24, Google Ads $33.10. Organic and Referral have no paid spend (cost = $0). (Q2, Q3, Q4)\n\n**How I measured it:**\n- **Q2 signups:** Users with `signup_date` between 2026-09-01 and 2026-11-30, grouped by `acquisition_source` (Q2).\n- **Marketing spend:** Sum of `spend_usd` from `marketing_spend` for the same date window, grouped by `channel` (Q3). Channels match `acquisition_source` values for paid sources.\n- **Paying users:** Distinct users from Q2 signups with at least one successful `subscription` or `ppv` charge within 30 days of their signup date (Q4).\n- **Cost per paying user:** `marketing_spend_usd / paying_users_30d` for each paid channel. Organic/Referral have no spend.\n\n**Checks:** \n- Marketing spend covers the full Q2 window with no gaps (Q1, Q14).\n- User signups and transactions have no orphan keys or duplicate primary keys (Q6, Q12, Q16).\n- Refund sign convention is violated for `google_play` refunds in Oct/Nov (stored positive), but this does not affect payer *counts* since we only count successful subscription/ppv charges (Q8).\n- 121 duplicate charge pairs exist within 5 minutes (Q10), but distinct-user counting avoids double-counting.\n\n**Confidence:** High \u2014 direct join of signups to transactions within a fixed 30-day window, spend data complete for the period, and payer definition matches the catalog's `cost_per_payer` analytical definition.",
-      "wall_s": 100.3
+      "headline": "Cost per paying user (30-day) for Q2 signups: google_ads $33.10, meta_ads $37.24, tiktok_ads $37.60, influencer $40.56; organic/referral $0",
+      "headline_value": 33.1,
+      "answer_markdown": "**Answer:** For Q2 (Sep\u2013Nov 2026) signups, cost per paying user within 30 days of signup by paid channel was: google_ads $33.10, meta_ads $37.24, tiktok_ads $37.60, influencer $40.56. Organic and referral channels had no marketing spend, so their cost per payer is $0. (Q5)\n\n**How I measured it:**\n- **Cohort:** Users with `signup_date` between 2026-09-01 and 2026-11-30 (Q2 per the metric catalog).\n- **Paying user:** A user from that cohort with at least one successful `subscription` or `ppv` transaction within 30 days of their signup date (per the `cost_per_payer` definition in the catalog).\n- **Spend:** Sum of `marketing_spend.spend_usd` for the same channel and date range (Sep\u2013Nov 2026).\n- **Cost per paying user:** `marketing_spend_usd / paying_users_30d` per channel.\n- **Channels:** Paid channels (`meta_ads`, `google_ads`, `tiktok_ads`, `influencer`) match between `users.acquisition_source` and `marketing_spend.channel`. Organic and referral have no spend rows.\n\n**Checks:**\n- Verified date ranges: users span Dec 2025\u2013Nov 2026 (Q1); marketing_spend and transactions cover Jun\u2013Nov 2026 (Q5, Q2, Q4).\n- Acquisition sources in users match marketing_spend channels (Q3).\n- Payer rates by channel are consistent with cost-per-payer ranking: google_ads and meta_ads have the highest 30-day payer rates (~19.8%), which drives their lower cost per payer despite higher CPI (Q7, Q6).\n- **Cohort maturity:** 9,101 Q2 signups occurred in November; their 30-day windows extend beyond the data cutoff (2026-11-30). Their payer counts and cost-per-payer will improve as more conversions are observed. This affects all channels proportionally to their November signup share.\n\n**Confidence:** Medium. The calculation follows the catalog definition exactly, but the November cohort is immature\u2014reported payer counts are lower bounds, so cost per payer is an upper bound for those users.",
+      "wall_s": 136.0
     },
     {
       "id": "E13",
@@ -631,32 +627,32 @@
       "category": "unanswerable",
       "question": "Why did subscribers cancel?",
       "judge": {
-        "pass": false,
-        "score": 3,
-        "failure_type": "overclaimed_causality",
-        "rationale": "The answer does not state that there are no cancellation reason codes or surveys, and it asserts reasons as fact rather than clearly labelling behavioural patterns as proxies (e.g., \"The dominant cause is early disengagement\" and \"didn't find enough value to continue\"). It overclaims causality instead of presenting activity/renewal patterns as indicative proxies only."
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer satisfies all three rubric conditions: it states there are no cancellation reason codes or surveys; it offers behavioural proxies (activity in the final 30 days, failed renewals vs voluntary, early tenure) clearly labelled as correlates/proxies rather than reasons; and it repeatedly avoids asserting causes as fact, explicitly noting correlation does not equal causation."
       },
-      "pass": false,
-      "failure_type": "overclaimed_causality",
+      "pass": true,
+      "failure_type": "none",
       "agent": {
         "stop": "submitted",
         "submitted": true,
-        "tool_calls": 41,
-        "sql_calls": 29,
-        "turns": 39,
-        "latency_s": 580.24,
+        "tool_calls": 31,
+        "sql_calls": 27,
+        "turns": 31,
+        "latency_s": 249.9,
         "usage": {
-          "input_tokens": 1939934,
-          "output_tokens": 27571,
+          "input_tokens": 926683,
+          "output_tokens": 11882,
           "cache_read_input_tokens": 0,
           "cache_creation_input_tokens": 0
         },
         "error": null
       },
-      "headline": "74% of subscribers cancelled, driven primarily by low initial engagement: 59% left in month 1 after averaging only 6.4 active days and 26 views vs 13.9 days and 53 views for retained users. They hit the free-episode limit 3\u00d7 more often (21% vs 7% of active days), suggesting the paywall appears before they perceive enough value. Involuntary churn and refunds are minor factors.",
-      "headline_value": 0.744,
-      "answer_markdown": "# Why did subscribers cancel?<br><br>**Answer:** 8,257 subscribers cancelled (74% of all subscribers). The dominant cause is **early disengagement**: 59% cancelled in month 1, and these users were far less active from day one\u2014averaging only 6.4 active days and 26 content views in their first month vs 13.9 days and 53 views for subscribers who stayed. They hit the daily free-episode limit at 3\u00d7 the rate of retained users (21% vs 7% of active days), suggesting they hit the paywall but didn't find enough value to continue. Involuntary churn (failed renewals) accounted for only 1.3% of cancellations; refunds were 5% but mostly occurred mid-subscription, not at cancellation.<br><br>## What the numbers say<br>- **Total cancelled**: 8,257 of 11,092 subscribers (74.4%) \u2014 snapshot as of 2026-11-30 (Q1, Q22)<br>- **When they left**: 59% in month 1 (30\u201331 days), 18% in month 2, 9% in month 3, rest later (Q8)<br>- **First-month engagement** (month-1 cancellations vs active subscribers):<br>  - Active days: 6.4 vs 13.9 (Q",
-      "wall_s": 594.5
+      "headline": "The data cannot tell us why subscribers cancelled \u2014 no reason codes exist. Behaviourally, 59% cancel within 30 days with very low engagement; only 1.3% had a failed payment. A Sep 1 free-limit increase (5\u21928 episodes/day) correlates with a 19 pp drop in early-churn share.",
+      "headline_value": 0.59,
+      "answer_markdown": "# Why did subscribers cancel?\n\n**Answer:** The data **cannot tell us why subscribers cancelled** \u2014 no cancellation reason codes, exit surveys, or support-ticket tags exist in the schema. What we can measure are behavioural correlates in the 30 days before cancellation.\n\n## What the numbers say\n- **8,257 cancelled subscribers** (8.7% of all users; 74% of those who ever subscribed).  \n- **59% cancelled within 30 days** of starting their subscription (Q9).  \n- **Only 1.3% had a failed renewal attempt** within 5 days of their subscription end \u2014 the vast majority appear to be voluntary cancellations (Q7).  \n- **Engagement in the final 30 days was far lower than active subscribers**:  \n  - 4.4 vs 15.4 view days, 15.4 vs 51.1 subscription views, 411 vs 772 watch minutes (Q19).  \n  - Completion rates were identical (~60%), so content quality per view did not differ (Q20).  \n  - Free-tier usage was minimal for both groups (~30% had any free views), but cancelled users averaged only 1.3 free views vs 4.6 for active users (Q21).  \n- **A product change on 2026-09-01 increased the daily free-episode limit from 5 to 8** (Q24). After this change:  \n  - Share of cancellations within 30 days fell from 65% to 46% (Q25).  \n  - Average tenure before cancellation rose from 49 to 74 days (Q25).  \n- **Monthly cancellations grew from ~420 (Jan) to ~960 (Sep), then declined to ~780 (Nov)** (Q12).  \n- **Subscription payment failure rate is low and stable** (1.8\u20132.2% monthly) (Q18).  \n- **Refunds at cancellation are negligible** (2 found in 8,257 users) (Q16).\n\n## Root causes (behavioural correlates, not causation)\n| Correlate | What changed / pattern | Evidence | Impact | Confidence |\n|-----------|------------------------|----------|--------|------------|\n| **Early voluntary churn** | 59% cancel in first 30 days; no failed payment preceding it | Q7, Q9 | High \u2014 dominant pattern | High |\n| **Low engagement before cancel** | Cancelled users watch ~\u2153 as much as active subs in final month | Q19 | High \u2014 strong association | High |\n| **Free-limit increase (Sep 1)** | After limit rose 5\u21928, early-churn share dropped 19 pp; tenure +25 days | Q24, Q25 | Medium \u2014 correlates with retention improvement | Medium |\n| **Payment failures** | Only 1.3% of cancelled users had a failed renewal near end | Q7 | Low \u2014 not a major driver | High |\n| **Content cadence** | Releases steady at 4\u201311 titles/month; no obvious gap aligning with churn spikes | Q27 | Low \u2014 no clear link | Low |\n\n## Bridge (cancellation-rate decomposition not possible without reason codes)\nThe observed cancellation volume is driven almost entirely by **early voluntary churn of low-engagement users**. The Sep free-limit increase is associated with a meaningful reduction in early churn, but without a controlled test we cannot isolate its causal effect.\n\n## Ruled out\n- **Involuntary churn (payment failure)**: only 1.3% of cancelled users (Q7).  \n- **Refund-driven cancellations**: 2 refunds near cancellation in 8,257 users (Q16).  \n- **Content drought**: releases steady; no month with zero new titles (Q27).  \n- **Completion-rate drop**: identical for cancelled and active users (Q20).\n\n## Data issues found\n- **No cancellation-reason field** in `users` or `transactions` \u2014 the core question is unanswerable from behavioural data alone.  \n- `users.subscription_end` for cancelled users sometimes falls **after the data window** (e.g., 2026-12-01), meaning some \u201ccancelled\u201d subscriptions may still be in a grace period (Q5).  \n- `fct_user_month` only covers Jun\u2013Nov 2026; earlier months rely on `users` snapshot.\n\n## Recommendations\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| Add a **cancellation-reason survey** (in-app, 1-tap + optional text) at the moment of cancellation | Product / Growth | Eliminates the #1 blind spot; enables root-cause prioritisation | % of cancellers providing a reason; reason distribution |\n| Run an **A/B test** of the free limit (5 vs 8 vs 10) on new cohorts | Product | Quantifies causal effect of free allowance on early churn & LTV | 30-day payer rate, 90-day retention, ARPU per cohort |\n| Build an **early-churn risk model** (tenure < 30 days, < 5 view days, < 100 watch min) and target with win-back offers | CRM / Data Science | 59% of cancellations happen in month 1; even a 10% save = ~480 subs/mo | Save rate vs control; incremental LTV |\n| Instrument **paywall exposure** (limit-hit rate, purchases-per-limit-hit) to see if the free-limit change altered conversion funnel | Analytics | Confirms whether the Sep change worked via reduced paywall friction or simply more free content | Limit-hit rate, payer conversion among limit-hitters |\n\n## Caveats and open questions\n- **Correlation \u2260 causation**: The Sep free-limit increase coincides with lower early churn, but seasonality, cohort composition, or marketing mix could contribute.  \n- **Cohort maturity**: The most recent cohorts (Oct\u2013Nov signups) have not yet completed a full 30-day window; early-churn rates may shift.  \n- **Platform-level effects**: We did not test iOS vs Android vs web checkout failure rates separately (sample sizes small).  \n- **Competitor actions**: Not observable in our data.",
+      "wall_s": 254.5
     },
     {
       "id": "E17",

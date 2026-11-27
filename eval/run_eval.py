@@ -47,7 +47,10 @@ def score_one(q: dict, gt: dict, result: dict, judge_fn=scoring.judge) -> dict:
     api_failed = result.get("stop") == "api_error" and not ans
     if q.get("judge") and not api_failed:     # don't spend judge calls on infrastructure failures
         try:
-            j = judge_fn(q["question"], q["judge"], entry.get("facts"), (ans or {}).get("answer_markdown", ""))
+            facts = dict(entry.get("facts") or {})
+            if "numeric" in q:   # the judge must see the headline truth too, or a correct total looks invented
+                facts["reference_headline_value"] = entry.get("value")
+            j = judge_fn(q["question"], q["judge"], facts, (ans or {}).get("answer_markdown", ""))
         except Exception as e:  # noqa: BLE001
             j = {"pass": False, "score": 0, "failure_type": "judge_error", "rationale": f"judge error: {e}"}
         out["judge"] = j
