@@ -30,3 +30,8 @@ E06 PASS (none) tools=45 sql=2 717.5s
 E08 FAIL (wrong_number) tools=16 sql=9 473.9s
 E16 FAIL (loop_or_timeout) tools=47 sql=25 727.4s
 E17 PASS (none) tools=45 sql=6 616.4s
+E21 PASS (none) tools=41 sql=12 1062.1s
+
+18/21 passed. Wrote /home/user/pockettoons-agent/eval/results/run_20261127T184511+0000.json and eval/results.md
+agent exit 0
+== 2026-11-27T18:45:11Z done
