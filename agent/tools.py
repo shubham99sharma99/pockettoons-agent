@@ -423,6 +423,24 @@ DISPATCH: dict[str, Callable[..., dict]] = {
 SQL_TOOLS = {"run_sql"}
 
 
+def _coerce_number(v: str, allow_null: bool) -> Any:
+    """Turn a number sent as text ("15,057", "$12.5", "8.5%", "null") into a number.
+
+    Open models often quote numbers in tool calls; returns the input unchanged if it
+    is not a clean number, so validation still rejects it.
+    """
+    s = v.strip()
+    if allow_null and s.lower() in ("", "null", "none"):
+        return None
+    pct = s.endswith("%")
+    s = s.rstrip("%").replace(",", "").replace("$", "").strip()
+    try:
+        n = float(s)
+    except ValueError:
+        return v
+    return n / 100 if pct else n
+
+
 def validate_input(name: str, args: Any) -> str | None:
     """Manual validation (tool inputs are streamed eagerly, so the API does not validate)."""
     spec = next((t for t in TOOL_SPECS if t["name"] == name), None)
@@ -437,9 +455,12 @@ def validate_input(name: str, args: Any) -> str | None:
     extra = [k for k in args if k not in schema["properties"]]
     if extra:
         return f"Unknown fields: {extra}"
-    for k, v in args.items():
+    for k in list(args):
         t = schema["properties"][k].get("type")
         types = t if isinstance(t, list) else [t]
+        if "number" in types and isinstance(args[k], str):
+            args[k] = _coerce_number(args[k], allow_null="null" in types)
+        v = args[k]
         ok = any((tt == "string" and isinstance(v, str)) or (tt == "array" and isinstance(v, list)) or
                  (tt == "number" and isinstance(v, (int, float)) and not isinstance(v, bool)) or
                  (tt == "null" and v is None) or tt is None for tt in types)
