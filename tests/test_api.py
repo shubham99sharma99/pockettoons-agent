@@ -78,3 +78,17 @@ def test_cors_allows_only_configured_origin(client):
     bad = client.options("/health", headers={"Origin": "https://evil.example", "Access-Control-Request-Method": "GET"})
     assert ok.headers.get("access-control-allow-origin") == "http://localhost:3000"
     assert "access-control-allow-origin" not in bad.headers
+
+
+def test_golden_questions_hidden_unless_enabled(client, monkeypatch):
+    monkeypatch.delenv("PT_EXPOSE_GOLDEN", raising=False)
+    assert client.get("/eval/questions").status_code == 404
+    monkeypatch.setenv("PT_EXPOSE_GOLDEN", "1")
+    qs = client.get("/eval/questions").json()["questions"]
+    assert len(qs) >= 20 and qs[0]["id"] == "E01" and qs[0]["sql"]
+    # every reference query passes the same guard the agent and SQL page use
+    import api.main as m
+    m.query_limiter.hits.clear()
+    for q in qs[:5]:
+        if q["sql"]:
+            assert client.post("/query", json={"sql": q["sql"]}).status_code == 200, q["id"]
