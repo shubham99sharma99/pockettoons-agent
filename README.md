@@ -104,7 +104,7 @@ budgets, SQL guard and citation check are the same for both providers. The eval 
 `PT_PROVIDER` unless `PT_JUDGE_PROVIDER` is set (e.g. judge NIM answers with Claude for a fair
 comparison). Not available on the NIM path: adaptive thinking, effort, prompt caching and the
 server-side refusal fallback. Also optional: `PT_NIM_BASE_URL`, `PT_NIM_TEMPERATURE` (0.2),
-`PT_NIM_MAX_TOKENS` (4096), `PT_NIM_RATE_WAIT_S` (600: total back-off on the free tier's per-model 429 limit; consider `PT_JUDGE_MODEL=nvidia/nemotron-3.5-super-vl-120b-a12b` so the judge uses a separate quota). `PT_MAX_SECONDS` (900) caps wall-clock time per question for either provider; `python -m eval.run_eval --resume` continues an interrupted eval. Expect weaker results than Claude on long investigations and
+`PT_NIM_MAX_TOKENS` (4096), `PT_NIM_RATE_WAIT_S` (600: total back-off on the free tier's per-model 429 limit; consider `PT_JUDGE_MODEL=nvidia/nemotron-3.5-super-vl-120b-a12b` so the judge uses a separate quota). `PT_MAX_SECONDS` (900) caps wall-clock time per question for either provider; `python -m eval.run_eval --resume` continues an interrupted eval, `--rejudge eval/results/latest.json [--resume]` re-scores stored answers without re-running the agent, and `scripts/autosave.sh <pid>` commits and pushes the checkpoints every two minutes during a long run. Expect weaker results than Claude on long investigations and
 data-quality traps; the eval shows by how much.
 
 ## Deploy

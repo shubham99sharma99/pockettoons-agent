@@ -126,15 +126,30 @@ def run(ids: list[str] | None, concurrency: int, agent_factory=None, judge_fn=sc
     return summarise([done[i] for i in order if i in done])
 
 
-def rejudge(source: Path, ids: list[str] | None = None, judge_fn=scoring.judge) -> dict:
+REJUDGE_PARTIAL = RESULTS / "rejudge_partial.json"
+
+
+def rejudge(source: Path, ids: list[str] | None = None, judge_fn=scoring.judge, resume: bool = False) -> dict:
     """Re-score stored answers (numeric check and judge) without re-running the agent.
-    Use after a judge outage or a rubric fix; the agent's answers are untouched."""
+    Use after a judge outage or a rubric fix; the agent's answers are untouched. Each re-scored
+    result is checkpointed to eval/results/rejudge_partial.json; resume=True skips those."""
     rows = json.loads(source.read_text())
     rows = rows["results"] if isinstance(rows, dict) else rows
     questions = {q["id"]: q for q in GT.load_questions()}
     gt = GT.build()
+    done: dict[str, dict] = {}
+    if resume:
+        try:
+            done = {r["id"]: r for r in json.loads(REJUDGE_PARTIAL.read_text())}
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+    else:
+        REJUDGE_PARTIAL.unlink(missing_ok=True)
     out = []
     for r in rows:
+        if r["id"] in done:
+            out.append(done[r["id"]])
+            continue
         if r["id"] not in questions or (ids and r["id"] not in ids):
             out.append(r)
             continue
@@ -144,6 +159,9 @@ def rejudge(source: Path, ids: list[str] | None = None, judge_fn=scoring.judge) 
         new["wall_s"] = r.get("wall_s")
         print(f"{r['id']} {'PASS' if new['pass'] else 'FAIL'} ({new['failure_type']})", flush=True)
         out.append(new)
+        done[new["id"]] = new
+        RESULTS.mkdir(parents=True, exist_ok=True)
+        REJUDGE_PARTIAL.write_text(json.dumps(list(done.values()), indent=1, default=str))
     return summarise(out)
 
 
@@ -229,12 +247,14 @@ def main(argv=None):
     ap.add_argument("--ids", nargs="*")
     ap.add_argument("--concurrency", type=int, default=3)
     ap.add_argument("--resume", action="store_true",
-                    help="skip questions already scored in eval/results/partial.json")
+                    help="skip questions already scored in eval/results/partial.json "
+                         "(or rejudge_partial.json with --rejudge)")
     ap.add_argument("--rejudge", metavar="RESULTS_JSON", type=Path,
                     help="re-score stored answers from a run_*.json / partial.json without re-running the agent")
     a = ap.parse_args(argv)
     if a.rejudge:
-        p = save(rejudge(a.rejudge, a.ids))
+        p = save(rejudge(a.rejudge, a.ids, resume=a.resume))
+        REJUDGE_PARTIAL.unlink(missing_ok=True)
         print(f"Re-scored. Wrote {p} and eval/results.md")
         return
     summary = run(a.ids, a.concurrency, resume=a.resume)

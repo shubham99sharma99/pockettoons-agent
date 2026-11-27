@@ -107,3 +107,29 @@ def test_nim_judge_retries_malformed_replies():
     fake = NS(chat=NS(completions=NS(create=lambda **k: NS(choices=[NS(message=NS(content=next(replies)))]))))
     v = scoring._judge_nim("p", client=fake)
     assert v["failure_type"] == "wrong_number" and v["rationale"] == "off"
+
+
+def test_rejudge_checkpoints_and_resumes(monkeypatch, tmp_path):
+    import json
+    import pytest
+    qs = [{"id": f"R{i}", "category": "simple", "question": "q", "judge": "rubric"} for i in range(3)]
+    monkeypatch.setattr(run_eval.GT, "load_questions", lambda: qs)
+    monkeypatch.setattr(run_eval.GT, "build", lambda: {"questions": {}})
+    monkeypatch.setattr(run_eval, "RESULTS", tmp_path)
+    monkeypatch.setattr(run_eval, "REJUDGE_PARTIAL", tmp_path / "rejudge_partial.json")
+    src = tmp_path / "latest.json"
+    src.write_text(json.dumps([{"id": q["id"], "headline": "h", "answer_markdown": "a", "agent": {}} for q in qs]))
+    calls = []
+
+    def flaky(*a):
+        calls.append(1)
+        if len(calls) == 2:
+            raise KeyboardInterrupt
+        return {"pass": True, "score": 9, "failure_type": "none", "rationale": ""}
+    with pytest.raises(KeyboardInterrupt):
+        run_eval.rejudge(src, judge_fn=flaky)
+    assert [r["id"] for r in json.loads((tmp_path / "rejudge_partial.json").read_text())] == ["R0"]
+    calls.clear()
+    s = run_eval.rejudge(src, judge_fn=lambda *a: (calls.append(1), {"pass": True, "score": 9,
+                         "failure_type": "none", "rationale": ""})[1], resume=True)
+    assert len(calls) == 2 and s["passed"] == 3
