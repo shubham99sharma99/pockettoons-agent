@@ -41,3 +41,30 @@ def test_markdown_report_renders():
              "agent": {"latency_s": 3, "tool_calls": 2, "usage": {"input_tokens": 10, "output_tokens": 5}}}]
     md = run_eval.to_markdown(run_eval.summarise(rows))
     assert "0 / 1 passed" in md and "Failure analysis" in md and "E01" in md
+
+
+def test_eval_checkpoints_each_result_and_resumes(monkeypatch, tmp_path):
+    import pytest
+    monkeypatch.setattr(run_eval, "RESULTS", tmp_path)
+    monkeypatch.setattr(run_eval, "PARTIAL", tmp_path / "partial.json")
+    qs = [{"id": f"X{i}", "category": "simple", "question": f"q{i}"} for i in range(3)]
+    monkeypatch.setattr(run_eval.GT, "load_questions", lambda: qs)
+    monkeypatch.setattr(run_eval.GT, "build", lambda: {"questions": {}})
+    asked = []
+
+    class Agent:
+        def run(self, question):
+            asked.append(question)
+            if question == "q2":
+                raise KeyboardInterrupt            # the run dies part-way
+            return type("R", (), {"to_dict": lambda self: {"answer": {"headline": "x"}, "stop": "submitted"}})()
+
+    with pytest.raises(KeyboardInterrupt):
+        run_eval.run(None, 1, agent_factory=Agent)
+    import json
+    assert sorted(r["id"] for r in json.loads((tmp_path / "partial.json").read_text())) == ["X0", "X1"]
+
+    asked.clear()
+    Agent.run = lambda self, q: (asked.append(q), type("R", (), {"to_dict": lambda s: {"answer": None, "stop": "x"}})())[1]
+    summary = run_eval.run(None, 1, agent_factory=Agent, resume=True)
+    assert asked == ["q2"] and [r["id"] for r in summary["results"]] == ["X0", "X1", "X2"]

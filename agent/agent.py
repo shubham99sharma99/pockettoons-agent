@@ -32,6 +32,10 @@ DEFAULT_EFFORT = os.environ.get("PT_EFFORT", "high")
 MAX_TOOL_CALLS = int(os.environ.get("PT_MAX_TOOL_CALLS", "40"))
 MAX_SQL_CALLS = int(os.environ.get("PT_MAX_SQL_CALLS", "32"))
 MAX_TURNS = int(os.environ.get("PT_MAX_TURNS", "45"))
+# Wall-clock budget per question. After it, tools refuse and ask for submit_answer; at
+# 1.5x the loop stops and returns the best text so far. Protects /ask and the eval from
+# slow providers (NIM steps slow down as the conversation grows).
+MAX_SECONDS = float(os.environ.get("PT_MAX_SECONDS", "900"))
 
 
 def llm_configured() -> bool:
@@ -132,11 +136,14 @@ def _attr(b: Any, k: str) -> Any:
 
 class AnalyticsAgent:
     def __init__(self, llm: LLM | None = None, max_tool_calls: int = MAX_TOOL_CALLS,
-                 max_sql_calls: int = MAX_SQL_CALLS, max_turns: int = MAX_TURNS):
+                 max_sql_calls: int = MAX_SQL_CALLS, max_turns: int = MAX_TURNS,
+                 max_seconds: float = MAX_SECONDS, clock: Callable[[], float] = time.monotonic):
         self.llm = llm or make_llm()
         self.max_tool_calls = max_tool_calls
         self.max_sql_calls = max_sql_calls
         self.max_turns = max_turns
+        self.max_seconds = max_seconds
+        self.clock = clock
 
     def run(self, question: str, on_event: EventSink | None = None) -> AgentResult:
         emit = on_event or (lambda e: None)
@@ -145,13 +152,17 @@ class AnalyticsAgent:
         messages: list = [{"role": "user", "content": question}]
         usage: dict = {}
         trace: list[dict] = []
-        t0 = time.monotonic()
+        t0 = self.clock()
         stop = "end_turn"
         last_text = ""
         turns = 0
         emit({"type": "start", "question": question, "model": self.llm.model})
 
         while turns < self.max_turns:
+            if self.clock() - t0 > 1.5 * self.max_seconds:
+                stop = "time_budget"
+                emit({"type": "error", "message": "Time budget exceeded; returning the best answer so far."})
+                break
             turns += 1
             buf: list[str] = []
 
@@ -192,7 +203,9 @@ class AnalyticsAgent:
                     except json.JSONDecodeError:
                         args = None
                 emit({"type": "tool_call", "id": tid, "name": name, "input": args})
-                if name in T.SQL_TOOLS and s.sql_calls >= self.max_sql_calls:
+                if name != "submit_answer" and self.clock() - t0 > self.max_seconds:
+                    out = {"error": "Time budget exhausted. Call submit_answer now with what you have."}
+                elif name in T.SQL_TOOLS and s.sql_calls >= self.max_sql_calls:
                     out = {"error": "SQL budget exhausted. Call submit_answer now with what you have."}
                 elif s.tool_calls >= self.max_tool_calls and name != "submit_answer":
                     out = {"error": "Tool budget exhausted. Call submit_answer now with what you have."}
@@ -221,7 +234,7 @@ class AnalyticsAgent:
         res = AgentResult(
             question=question, model=self.llm.model, answer=answer, submitted=submitted, stop=stop,
             tool_calls=s.tool_calls, sql_calls=s.sql_calls, turns=turns,
-            latency_s=round(time.monotonic() - t0, 2), usage=usage,
+            latency_s=round(self.clock() - t0, 2), usage=usage,
             evidence=s.log.entries, hypotheses=list(s.hypotheses.values()), tool_trace=trace)
         emit({"type": "answer", "answer": answer, "submitted": submitted})
         emit({"type": "done", "stop": stop, "tool_calls": s.tool_calls, "sql_calls": s.sql_calls,

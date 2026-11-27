@@ -56,7 +56,7 @@ pip install -r requirements-dev.txt
 cp .env.example .env            # then put your key in .env (never commit it)
 
 make build    # generate data (DuckDB + SQLite), dbt build, recompute eval answer key (stop the API first: dbt needs a write lock)
-make test     # 68 tests: guardrails, tools, agent loop (scripted LLM), data story, leakage, API
+make test     # 70 tests: guardrails, tools, agent loop (scripted LLM), data story, leakage, API
 ```
 
 Ask questions (needs `ANTHROPIC_API_KEY` in `.env`):
@@ -104,7 +104,7 @@ budgets, SQL guard and citation check are the same for both providers. The eval 
 `PT_PROVIDER` unless `PT_JUDGE_PROVIDER` is set (e.g. judge NIM answers with Claude for a fair
 comparison). Not available on the NIM path: adaptive thinking, effort, prompt caching and the
 server-side refusal fallback. Also optional: `PT_NIM_BASE_URL`, `PT_NIM_TEMPERATURE` (0.2),
-`PT_NIM_MAX_TOKENS` (4096). Expect weaker results than Claude on long investigations and
+`PT_NIM_MAX_TOKENS` (4096). `PT_MAX_SECONDS` (900) caps wall-clock time per question for either provider; `python -m eval.run_eval --resume` continues an interrupted eval. Expect weaker results than Claude on long investigations and
 data-quality traps; the eval shows by how much.
 
 ## Deploy
@@ -157,7 +157,7 @@ Q2 revenue by about 3%.
 
 ## Status of this build
 
-Everything above was built and run in a cloud sandbox: data, dbt build, 68 tests,
+Everything above was built and run in a cloud sandbox: data, dbt build, 70 tests,
 the Docker image (built and smoke-tested), the Next.js production build, and the
 board deck. **The live agent run and the live eval were not run here because no
 API key was available in that environment.** Run `python cli.py --gm` and

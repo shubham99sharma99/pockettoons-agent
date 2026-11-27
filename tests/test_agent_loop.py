@@ -65,3 +65,29 @@ def test_system_prompt_has_budget_and_format():
     from agent.agent import system_prompt
     p = system_prompt(40)
     assert "40 tool calls" in p and "**Answer:**" in p and "{max_tool_calls}" not in p
+
+
+def test_time_budget_forces_submit_then_stops():
+    t = {"now": 0.0}
+
+    def clock():
+        return t["now"]
+
+    class SlowLLM(ScriptedLLM):
+        def step(self, *a, **k):
+            t["now"] += 60.0                      # every model step takes a minute
+            return super().step(*a, **k)
+
+    sql = {"query": "SELECT count(*) AS n FROM users", "purpose": "count"}
+    llm = SlowLLM([msg(tool("run_sql", sql, "a")), msg(tool("run_sql", sql, "b")),
+                   msg(tool("submit_answer", {"answer_markdown": "users (Q1)", "headline": "users",
+                                              "confidence": "low", "query_ids": ["Q1"]}, "c"))])
+    res = AnalyticsAgent(llm=llm, max_seconds=90, clock=clock).run("How many users?")
+    assert res.submitted and res.sql_calls == 1           # 2nd query refused after the budget
+    refused = llm.calls[2]["messages"][-1]["content"][0]
+    assert refused["is_error"] and "Time budget" in refused["content"]
+
+    t["now"] = 0.0
+    endless = SlowLLM([msg(tool("get_schema", {}, f"g{i}")) for i in range(20)])
+    res = AnalyticsAgent(llm=endless, max_seconds=90, clock=clock).run("Loop forever")
+    assert res.stop == "time_budget" and not res.submitted and res.turns <= 3

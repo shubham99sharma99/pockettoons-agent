@@ -14,6 +14,7 @@ import argparse
 import json
 import statistics
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -66,11 +67,37 @@ def score_one(q: dict, gt: dict, result: dict, judge_fn=scoring.judge) -> dict:
     return out
 
 
-def run(ids: list[str] | None, concurrency: int, agent_factory=None, judge_fn=scoring.judge) -> dict:
+PARTIAL = RESULTS / "partial.json"
+
+
+def _load_partial() -> dict[str, dict]:
+    try:
+        return {r["id"]: r for r in json.loads(PARTIAL.read_text())}
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def run(ids: list[str] | None, concurrency: int, agent_factory=None, judge_fn=scoring.judge,
+        resume: bool = False) -> dict:
+    """Run the golden questions. Each scored result is checkpointed to eval/results/partial.json
+    as soon as it finishes, so an interrupted run keeps its work; resume=True skips those."""
     from agent.agent import AnalyticsAgent
     questions = [q for q in GT.load_questions() if not ids or q["id"] in ids]
     gt = GT.build()  # always recompute: the answer key can never be stale
     factory = agent_factory or (lambda: AnalyticsAgent())
+    done = _load_partial() if resume else {}
+    if not resume:
+        PARTIAL.unlink(missing_ok=True)
+    todo = [q for q in questions if q["id"] not in done]
+    if done:
+        print(f"resuming: {len(questions) - len(todo)} already done, {len(todo)} to run", flush=True)
+    lock = threading.Lock()
+
+    def checkpoint(scored):
+        with lock:
+            done[scored["id"]] = scored
+            RESULTS.mkdir(parents=True, exist_ok=True)
+            PARTIAL.write_text(json.dumps(list(done.values()), indent=1, default=str))
 
     def one(q):
         t0 = time.monotonic()
@@ -82,11 +109,13 @@ def run(ids: list[str] | None, concurrency: int, agent_factory=None, judge_fn=sc
         scored["wall_s"] = round(time.monotonic() - t0, 1)
         print(f"{q['id']} {'PASS' if scored['pass'] else 'FAIL'} ({scored['failure_type']}) "
               f"tools={res.get('tool_calls')} sql={res.get('sql_calls')} {scored['wall_s']}s", flush=True)
+        checkpoint(scored)
         return scored
 
     with ThreadPoolExecutor(max_workers=concurrency) as ex:
-        rows = list(ex.map(one, questions))
-    return summarise(rows)
+        list(ex.map(one, todo))
+    order = [q["id"] for q in questions]
+    return summarise([done[i] for i in order if i in done])
 
 
 def summarise(rows: list[dict]) -> dict:
@@ -165,9 +194,12 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--ids", nargs="*")
     ap.add_argument("--concurrency", type=int, default=3)
+    ap.add_argument("--resume", action="store_true",
+                    help="skip questions already scored in eval/results/partial.json")
     a = ap.parse_args(argv)
-    summary = run(a.ids, a.concurrency)
+    summary = run(a.ids, a.concurrency, resume=a.resume)
     p = save(summary)
+    PARTIAL.unlink(missing_ok=True)
     print(f"\n{summary['passed']}/{summary['n']} passed. Wrote {p} and eval/results.md")
 
 
