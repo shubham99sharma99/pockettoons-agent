@@ -26,3 +26,4 @@ ultra up (17:37:17)
 == 2026-11-27T17:37:17Z agent re-run of remaining questions (resume)
 resuming: 15 already done, 6 to run
 E04 PASS (none) tools=34 sql=6 475.7s
+E06 PASS (none) tools=45 sql=2 717.5s

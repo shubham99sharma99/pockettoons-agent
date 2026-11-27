@@ -571,5 +571,52 @@
   "headline_value": null,
   "answer_markdown": "**Answer:** 593 US users had their most recent subscription start in September 2026 (Q1, Q6). Of these, 534 were first-time subscribers and 59 were resubscribers who had subscribed before.\n\n**How I measured it:** Used the `users` table's `subscription_start` field (defined as \"Start date of the most recent subscription\") filtered to `country = 'US'` and `subscription_start` between 2026-09-01 and 2026-09-30. Cross-checked against successful subscription transactions in September (Q2, Q4) and decomposed into first-time vs. returning subscribers (Q6).\n\n**Checks:** The users table snapshot shows 593 users with `subscription_start` in September 2026. Transaction data shows 2,379 distinct US users with successful subscription charges in September, but most are renewals for existing subscribers. The 593 figure aligns with the \"most recent subscription start\" definition in the schema.\n\n**Confidence:** High \u2014 the users table explicitly tracks the most recent subscription start date per user, and the decomposition into first-time (534) vs. resubscribers (59) is consistent with transaction history.",
   "wall_s": 475.7
+ },
+ {
+  "id": "E06",
+  "category": "filtered",
+  "question": "Split Q2 PPV revenue into paywall unlocks and premium episodes. How much came from paywall unlocks?",
+  "numeric": {
+   "pass": true,
+   "truth": 2385.899999999943,
+   "candidates": [
+    2.0,
+    2026.0,
+    2385.9,
+    0.99,
+    6059.55,
+    1.99
+   ],
+   "tol": {
+    "rel": 0.03
+   }
+  },
+  "judge": {
+   "pass": true,
+   "score": 8,
+   "failure_type": "none",
+   "rationale": "Both parts are provided and match the facts: paywall unlocks $2,385.90 (2,410 \u00d7 $0.99) and premium episodes $6,059.55 (3,045 \u00d7 $1.99). The premium figure matches the reference fact exactly ($6,059.55), and the $0.99 vs $1.99 price-point split follows the rubric's definition. The agent correctly splits by charge amount rather than joining transactions to content_catalog (transactions has no content_id) and cross-checks via content_views joined to content_tier. Minor shortcoming: it does not explicitly state that transactions lacks content_id, though the method implicitly handles it correctly."
+  },
+  "pass": true,
+  "failure_type": "none",
+  "agent": {
+   "stop": "max_turns",
+   "submitted": false,
+   "tool_calls": 45,
+   "sql_calls": 2,
+   "turns": 45,
+   "latency_s": 683.13,
+   "usage": {
+    "input_tokens": 863282,
+    "output_tokens": 28181,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+   },
+   "error": null
+  },
+  "headline": "**Answer:** In Q2 (Sep\u2013Nov 2026), **$2,385.90** of PPV revenue came from paywall unlocks (standard-tier episodes at $0.99 each). The remaining $6,059.55 came from premium episodes at $1.99 each. (Q1)",
+  "headline_value": null,
+  "answer_markdown": "**Answer:** In Q2 (Sep\u2013Nov 2026), **$2,385.90** of PPV revenue came from paywall unlocks (standard-tier episodes at $0.99 each). The remaining $6,059.55 came from premium episodes at $1.99 each. (Q1)\n\n**How I measured it:**  \n- **Period:** Q2 = 2026-09-01 to 2026-11-30 (per the metric catalog).  \n- **Source:** `transactions` table, filtered to `type = 'ppv'`, `status = 'success'`.  \n- **Split logic (per the analytical definition `ppv_revenue_split`):**  \n  - $0.99 charges \u2192 paywall unlocks (standard-tier episodes beyond the daily free allowance).  \n  - $1.99 charges \u2192 premium episodes.  \n- **Cross-check:** PPV views in `content_views` joined to `content_catalog.content_tier` show 2,405 standard-tier and 3,039 premium-tier PPV views in Q2, closely matching the 2,410 and 3,045 successful transactions at each price point (Q2).\n\n**Checks:**  \n- Verified the price-point split against the documented PPV pricing ($0.99 standard, $1.99 premium).  \n- Cross-checked transaction counts with PPV view counts by content tier; the small gaps (5 and 6) are within expected timing/attribution differences.\n\n**Confidence:** High \u2014 the split is directly observable from transaction amounts and aligns with the content-tier view data.",
+  "wall_s": 717.5
  }
 ]
