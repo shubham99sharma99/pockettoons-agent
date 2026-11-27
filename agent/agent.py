@@ -158,6 +158,8 @@ class AnalyticsAgent:
         last_text = ""
         turns = 0
         error = None
+        nudged = False
+        submit_only = [t for t in T.TOOL_SPECS if t["name"] == "submit_answer"]
         emit({"type": "start", "question": question, "model": self.llm.model})
 
         while turns < self.max_turns:
@@ -172,8 +174,12 @@ class AnalyticsAgent:
                 buf.append(t)
                 emit({"type": "text", "text": t})
 
+            # Once a budget is spent (or two turns remain), offer only submit_answer, so the
+            # model cannot burn its remaining turns on calls that will be refused.
+            wrap_up = (self.clock() - t0 > self.max_seconds or s.tool_calls >= self.max_tool_calls
+                       or s.sql_calls >= self.max_sql_calls or turns >= self.max_turns - 1)
             try:
-                resp = self.llm.step(system, messages, T.TOOL_SPECS, on_text)
+                resp = self.llm.step(system, messages, submit_only if wrap_up else T.TOOL_SPECS, on_text)
             except Exception as e:  # noqa: BLE001
                 stop = "api_error"
                 error = f"{type(e).__name__}: {str(e)[:300]}"
@@ -194,6 +200,12 @@ class AnalyticsAgent:
             if stop_reason == "pause_turn":
                 continue
             if not tool_uses:
+                if not nudged and stop_reason in ("end_turn", "stop_sequence", None) and turns < self.max_turns:
+                    nudged = True   # ended with prose: ask once for the structured, cited answer
+                    messages.append({"role": "user", "content": [{"type": "text", "text":
+                        "You ended without calling submit_answer. Call submit_answer now with your "
+                        "findings so far, citing query IDs."}]})
+                    continue
                 stop = stop_reason or "end_turn"
                 break
 

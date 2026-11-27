@@ -69,7 +69,7 @@ questions:
 
   - id: E06
     category: filtered
-    question: Split Q2 PPV revenue into paywall unlocks and premium episodes.
+    question: Split Q2 PPV revenue into paywall unlocks and premium episodes. How much came from paywall unlocks?
     numeric:
       sql: SELECT SUM(amount_usd) FROM transactions WHERE type = 'ppv' AND status = 'success' AND amount_usd = 0.99 AND date BETWEEN '2026-09-01' AND '2026-11-30'
       tol: {rel: 0.03}

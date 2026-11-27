@@ -24,7 +24,7 @@ class ScriptedLLM:
         self.calls = []
 
     def step(self, system, messages, tools, on_text):
-        self.calls.append({"system": system, "messages": list(messages)})
+        self.calls.append({"system": system, "messages": list(messages), "tools": list(tools)})
         if not self.script:
             return msg(text("done"), stop="end_turn")
         m = self.script.pop(0)

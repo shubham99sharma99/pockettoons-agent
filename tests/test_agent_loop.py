@@ -39,7 +39,7 @@ def test_budget_is_enforced():
     res = AnalyticsAgent(llm=llm, max_sql_calls=3).run("loop forever")
     assert res.sql_calls == 3
     assert any("budget exhausted" in (t["error"] or "") for t in res.tool_trace)
-    assert not res.submitted and res.answer["answer_markdown"] == "stopping"
+    assert not res.submitted and res.answer["answer_markdown"] == "done"   # prose after the one nudge
 
 
 def test_max_turns_stops_loop():
@@ -91,3 +91,24 @@ def test_time_budget_forces_submit_then_stops():
     endless = SlowLLM([msg(tool("get_schema", {}, f"g{i}")) for i in range(20)])
     res = AnalyticsAgent(llm=endless, max_seconds=90, clock=clock).run("Loop forever")
     assert res.stop == "time_budget" and not res.submitted and res.turns <= 3
+
+
+def test_prose_ending_is_nudged_once_to_submit():
+    llm = ScriptedLLM([
+        msg(text("Let me compile the findings."), stop="end_turn"),
+        msg(tool("submit_answer", {"answer_markdown": "**Answer:** done", "headline": "done",
+                                   "confidence": "low", "query_ids": []}, "s1")),
+    ])
+    res = AnalyticsAgent(llm=llm).run("q")
+    assert res.submitted and res.stop == "submitted"
+    assert "submit_answer" in llm.calls[1]["messages"][-1]["content"][0]["text"]
+
+
+def test_spent_budget_offers_only_submit_answer():
+    llm = ScriptedLLM([msg(tool("get_schema", {}, f"g{i}")) for i in range(2)] + [
+        msg(tool("submit_answer", {"answer_markdown": "**Answer:** partial", "headline": "partial",
+                                   "confidence": "low", "query_ids": []}, "s1"))])
+    res = AnalyticsAgent(llm=llm, max_tool_calls=2).run("q")
+    assert res.submitted
+    assert len(llm.calls[0]["tools"]) > 1
+    assert [t["name"] for t in llm.calls[2]["tools"]] == ["submit_answer"]
