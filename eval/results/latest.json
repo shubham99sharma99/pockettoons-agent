@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-11-27T18:45:11+00:00",
+  "run_at": "2026-11-27T18:55:41+00:00",
   "model": "nvidia/nemotron-3-ultra-550b-a55b",
   "provider": "nim",
   "judge_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
@@ -47,7 +47,7 @@
   "failure_types": {
     "wrong_number": 1,
     "did_not_state_assumption": 1,
-    "loop_or_timeout": 1
+    "overclaimed_causality": 1
   },
   "infra_failures": 0,
   "median_latency_s": 320.75,
@@ -632,31 +632,31 @@
       "question": "Why did subscribers cancel?",
       "judge": {
         "pass": false,
-        "score": 0,
-        "failure_type": "other",
-        "rationale": "The agent answer is empty. It does not state that there are no cancellation reason codes or surveys, does not offer behavioural proxies labelled as proxies, and therefore does not meet the rubric's pass criteria."
+        "score": 3,
+        "failure_type": "overclaimed_causality",
+        "rationale": "The answer does not state that there are no cancellation reason codes or surveys, and it asserts reasons as fact rather than clearly labelling behavioural patterns as proxies (e.g., \"The dominant cause is early disengagement\" and \"didn't find enough value to continue\"). It overclaims causality instead of presenting activity/renewal patterns as indicative proxies only."
       },
       "pass": false,
-      "failure_type": "loop_or_timeout",
+      "failure_type": "overclaimed_causality",
       "agent": {
-        "stop": "max_turns",
-        "submitted": false,
-        "tool_calls": 47,
-        "sql_calls": 25,
-        "turns": 45,
-        "latency_s": 724.6,
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 41,
+        "sql_calls": 29,
+        "turns": 39,
+        "latency_s": 580.24,
         "usage": {
-          "input_tokens": 1263480,
-          "output_tokens": 37532,
+          "input_tokens": 1939934,
+          "output_tokens": 27571,
           "cache_read_input_tokens": 0,
           "cache_creation_input_tokens": 0
         },
         "error": null
       },
-      "headline": null,
-      "headline_value": null,
-      "answer_markdown": null,
-      "wall_s": 727.4
+      "headline": "74% of subscribers cancelled, driven primarily by low initial engagement: 59% left in month 1 after averaging only 6.4 active days and 26 views vs 13.9 days and 53 views for retained users. They hit the free-episode limit 3\u00d7 more often (21% vs 7% of active days), suggesting the paywall appears before they perceive enough value. Involuntary churn and refunds are minor factors.",
+      "headline_value": 0.744,
+      "answer_markdown": "# Why did subscribers cancel?<br><br>**Answer:** 8,257 subscribers cancelled (74% of all subscribers). The dominant cause is **early disengagement**: 59% cancelled in month 1, and these users were far less active from day one\u2014averaging only 6.4 active days and 26 content views in their first month vs 13.9 days and 53 views for subscribers who stayed. They hit the daily free-episode limit at 3\u00d7 the rate of retained users (21% vs 7% of active days), suggesting they hit the paywall but didn't find enough value to continue. Involuntary churn (failed renewals) accounted for only 1.3% of cancellations; refunds were 5% but mostly occurred mid-subscription, not at cancellation.<br><br>## What the numbers say<br>- **Total cancelled**: 8,257 of 11,092 subscribers (74.4%) \u2014 snapshot as of 2026-11-30 (Q1, Q22)<br>- **When they left**: 59% in month 1 (30\u201331 days), 18% in month 2, 9% in month 3, rest later (Q8)<br>- **First-month engagement** (month-1 cancellations vs active subscribers):<br>  - Active days: 6.4 vs 13.9 (Q",
+      "wall_s": 594.5
     },
     {
       "id": "E17",

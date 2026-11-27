@@ -37,3 +37,6 @@ agent exit 0
 == 2026-11-27T18:45:11Z done
 == 2026-11-27T18:45:45Z re-run E16 with forced wrap-up submit
 resuming: 20 already done, 1 to run
+E16 FAIL (overclaimed_causality) tools=41 sql=29 594.5s
+
+18/21 passed. Wrote /home/user/pockettoons-agent/eval/results/run_20261127T185541+0000.json and eval/results.md
