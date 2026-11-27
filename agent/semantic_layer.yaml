@@ -1,0 +1,78 @@
+# Agent-facing semantic layer: segments, periods, product facts and analytical
+# definitions that are not simple MetricFlow metrics. Governed metrics
+# (mau, net_revenue, payer_rate, ...) live in dbt/models/semantic/metrics.yml and
+# are merged into the same catalog by agent/semantic.py.
+#
+# RULE: generic definitions only. No findings, no dates of product changes,
+# no expected values. tests/test_no_leakage.py enforces this.
+
+dialect: duckdb
+notes:
+  - "All tables live in the analytics schema; refer to them by bare name (e.g. FROM sessions)."
+  - "All dates are UTC calendar dates; all amounts are USD."
+  - "Date helpers: date_trunc('month', date), date + INTERVAL 30 DAY, date_diff('day', a, b), strftime(date, '%Y-%m')."
+  - "Use COUNT(*) FILTER (WHERE ...) for conditional counts."
+
+product_facts:
+  - "Freemium anime streaming app. Non-subscribers get a daily allowance of free standard-tier episodes; the size of the allowance is not documented here; infer it from the data if needed."
+  - "Subscription: $9.99 per month, monthly plans only, same list price in every country."
+  - "Pay-per-view: $0.99 to unlock a standard episode beyond the daily free allowance; $1.99 for a premium episode."
+  - "Markets: US, Philippines (PH), Indonesia (ID), Brazil (BR), Mexico (MX)."
+
+segments:
+  us: "country = 'US'"
+  new_markets: "country IN ('PH','ID','BR','MX')"
+  sea: "country IN ('PH','ID')"
+  latam: "country IN ('BR','MX')"
+  paid_channels: "acquisition_source IN ('meta_ads','google_ads','tiktok_ads','influencer')"
+  organic_channels: "acquisition_source IN ('organic','referral')"
+
+periods:
+  data_window: "2026-06-01 to 2026-11-30"
+  q1: "2026-06-01 to 2026-08-31 (first quarter of the data window: Jun-Aug)"
+  q2: "2026-09-01 to 2026-11-30 (second quarter of the data window: Sep-Nov)"
+  qoq: "Q2 vs Q1 as defined above"
+  month: "calendar month; 'last month' = the latest complete month in the data"
+
+definitions:
+  quarterly_mau:
+    description: "Mean of the three monthly MAU values in the quarter (not distinct users over 90 days)."
+  d30_retention:
+    description: "Share of a signup cohort with >= 1 session on days 30-36 after signup_date."
+    sql: |
+      WITH c AS (SELECT user_id, signup_date FROM users WHERE signup_date BETWEEN :start AND :end)
+      SELECT AVG(CASE WHEN EXISTS (SELECT 1 FROM sessions s WHERE s.user_id = c.user_id
+                 AND s.date BETWEEN c.signup_date + 30 AND c.signup_date + 36) THEN 1 ELSE 0 END) AS d30
+      FROM c
+    caveat: "Only cohorts whose day-36 falls inside the data window can be measured."
+  free_views_per_user_day:
+    description: "Number of view_type = 'free' views per user per date (fct_user_day.free_views)."
+  observed_free_limit:
+    description: "MAX(free views per user-day) per date: the largest free allowance anyone used that day."
+    sql: "SELECT date, MAX(free_views) AS observed_free_limit FROM fct_user_day GROUP BY 1 ORDER BY 1"
+  limit_hit_day:
+    description: "A user-day where free_views equals the observed free limit for that date."
+  limit_hit_rate:
+    description: "Limit-hit user-days / active non-subscriber user-days (or / all active user-days; state which)."
+  purchases_per_limit_hit:
+    description: "Successful ppv or subscription charges on limit-hit days / limit-hit days."
+  ppv_unlock:
+    description: "A ppv view of standard-tier content (an unlock beyond the daily free allowance)."
+  ppv_premium:
+    description: "A ppv view of premium-tier content."
+  ppv_revenue_split:
+    description: "transactions has no content_id. Split ppv revenue by price point: $0.99 charges = standard unlocks, $1.99 charges = premium episodes; cross-check with ppv views joined to content_catalog.content_tier."
+  completion_rate:
+    description: "SUM(watch_duration_sec) / SUM(content_duration_sec)."
+  cpi:
+    description: "Cost per install: spend_usd / new users from that channel (users.acquisition_source = marketing_spend.channel) in the same period."
+  cost_per_payer:
+    description: "spend_usd / users from that channel who made a successful subscription or ppv charge within 30 days of signup."
+  active_subscribers_on_date:
+    description: "Users whose latest successful subscription charge on or before the date is within the previous 30 days (ledger view). users.subscription_status is only a snapshot as of the last date; cross-check the two."
+  voluntary_churn:
+    description: "Subscriptions that ended without a preceding failed renewal attempt / active subscribers."
+  involuntary_churn:
+    description: "Subscriptions that ended after a failed renewal attempt / active subscribers."
+  duplicate_charge:
+    description: "Two successful charges with the same user_id, type and amount_usd within 5 minutes (created_at)."

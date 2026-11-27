@@ -1,0 +1,12 @@
+version: 2
+sources:
+  - name: raw
+    schema: raw
+    description: Raw tables written by data/generate_data.py (the "production" app database).
+    tables:
+      - name: users
+      - name: sessions
+      - name: content_views
+      - name: transactions
+      - name: content_catalog
+      - name: marketing_spend

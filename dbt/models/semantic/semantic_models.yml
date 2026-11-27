@@ -1,0 +1,103 @@
+version: 2
+
+# MetricFlow semantic models. Generic definitions only: what each table can be
+# measured by. No findings, dates of changes or expected values belong here.
+
+semantic_models:
+  - name: user_months
+    description: User x calendar month activity and revenue.
+    model: ref('fct_user_month')
+    defaults: {agg_time_dimension: activity_month}
+    primary_entity: user_month
+    entities:
+      - {name: user, type: foreign, expr: user_id}
+    dimensions:
+      - {name: activity_month, type: time, expr: month, type_params: {time_granularity: month}}
+      - {name: signup_month, type: time, type_params: {time_granularity: month}}
+      - {name: country, type: categorical}
+      - {name: acquisition_source, type: categorical}
+      - {name: is_active, type: categorical}
+      - {name: is_payer, type: categorical}
+    measures:
+      - {name: active_users, agg: count_distinct, expr: "case when is_active then user_id end"}
+      - {name: paying_users_m, agg: count_distinct, expr: "case when is_payer then user_id end"}
+      - {name: net_revenue_m, agg: sum, expr: net_revenue}
+      - {name: gross_revenue_m, agg: sum, expr: gross_revenue}
+
+  - name: sessions
+    description: App sessions.
+    model: ref('sessions')
+    defaults: {agg_time_dimension: session_date}
+    entities:
+      - {name: session, type: primary, expr: session_id}
+      - {name: user, type: foreign, expr: user_id}
+    dimensions:
+      - {name: session_date, type: time, expr: date, type_params: {time_granularity: day}}
+      - {name: platform, type: categorical}
+    measures:
+      - {name: session_count, agg: count, expr: session_id}
+      - {name: daily_active_users, agg: count_distinct, expr: user_id}
+      - {name: session_seconds, agg: sum, expr: duration_sec}
+
+  - name: transactions
+    description: Charge attempts and refunds.
+    model: ref('fct_transactions')
+    defaults: {agg_time_dimension: txn_date}
+    entities:
+      - {name: txn, type: primary, expr: txn_id}
+      - {name: user, type: foreign, expr: user_id}
+    dimensions:
+      - {name: txn_date, type: time, expr: date, type_params: {time_granularity: day}}
+      - {name: type, type: categorical}
+      - {name: status, type: categorical}
+      - {name: payment_method, type: categorical}
+      - {name: country, type: categorical}
+      - {name: acquisition_source, type: categorical}
+    measures:
+      - {name: amount_usd_success, agg: sum, expr: "case when status = 'success' then amount_usd else 0 end"}
+      - {name: gross_charges_usd, agg: sum, expr: "case when status = 'success' and type in ('subscription','ppv') then amount_usd else 0 end"}
+      - {name: successful_charges, agg: sum, expr: "case when status = 'success' and type in ('subscription','ppv') then 1 else 0 end"}
+      - {name: charge_attempts, agg: sum, expr: "case when type in ('subscription','ppv') then 1 else 0 end"}
+      - {name: failed_charges, agg: sum, expr: "case when status = 'failed' then 1 else 0 end"}
+      - {name: refund_count, agg: sum, expr: "case when type = 'refund' then 1 else 0 end"}
+
+  - name: content_views
+    description: Episodes started.
+    model: ref('content_views')
+    defaults: {agg_time_dimension: view_date}
+    entities:
+      - {name: view, type: primary, expr: view_id}
+      - {name: user, type: foreign, expr: user_id}
+    dimensions:
+      - {name: view_date, type: time, expr: date, type_params: {time_granularity: day}}
+      - {name: view_type, type: categorical}
+    measures:
+      - {name: views, agg: count, expr: view_id}
+      - {name: watch_seconds, agg: sum, expr: watch_duration_sec}
+      - {name: content_seconds, agg: sum, expr: content_duration_sec}
+
+  - name: signups
+    description: Users by signup date.
+    model: ref('users')
+    defaults: {agg_time_dimension: signup_date}
+    entities:
+      - {name: user, type: primary, expr: user_id}
+    dimensions:
+      - {name: signup_date, type: time, type_params: {time_granularity: day}}
+      - {name: country, type: categorical}
+      - {name: acquisition_source, type: categorical}
+    measures:
+      - {name: signup_count, agg: count, expr: user_id}
+
+  - name: marketing_spend
+    description: Daily paid spend by channel.
+    model: ref('marketing_spend')
+    defaults: {agg_time_dimension: spend_date}
+    primary_entity: spend_row
+    dimensions:
+      - {name: spend_date, type: time, expr: date, type_params: {time_granularity: day}}
+      - {name: channel, type: categorical}
+    measures:
+      - {name: spend, agg: sum, expr: spend_usd}
+      - {name: impressions, agg: sum}
+      - {name: clicks, agg: sum}

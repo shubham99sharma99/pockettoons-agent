@@ -1,0 +1,27 @@
+# Render Blueprint: free-tier Docker web service for the API.
+services:
+  - type: web
+    name: pockettoons-agent-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false            # set in the Render dashboard, never committed
+      - key: ALLOWED_ORIGINS
+        value: https://YOUR-APP.vercel.app
+      - key: ALLOWED_ORIGIN_REGEX
+        value: ""              # optional, e.g. https://pockettoons-.*\.vercel\.app for preview URLs
+      - key: ASK_RATE_PER_MIN
+        value: "4"
+      - key: ASK_RATE_PER_DAY
+        value: "200"
+      - key: EVAL_ADMIN_TOKEN
+        sync: false            # protects POST /eval/run (costs API credits)
+      - key: MOTHERDUCK_TOKEN
+        sync: false            # read-only (read scaling) token; set in the dashboard
+      - key: PT_MD_DATABASE
+        value: pockettoons     # leave empty to use the DuckDB file baked into the image
+      - key: PT_EFFORT
+        value: high

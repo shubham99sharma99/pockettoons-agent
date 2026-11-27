@@ -1,0 +1,20 @@
+version: 2
+models:
+  - name: fct_user_day
+    description: One row per user per active day (>= 1 session), with views by type and successful purchases that day. Country, source and signup date are joined from users; platform is the session platform.
+    columns:
+      - name: free_views
+        description: Episodes watched as view_type = 'free' that day.
+      - name: days_since_signup
+        description: date - signup_date in days.
+  - name: fct_user_month
+    description: One row per user per calendar month with a session or a transaction. is_active = had a session; is_payer = at least one successful subscription or ppv charge. net_revenue sums amount_usd of successful rows as stored (documented sign convention).
+  - name: fct_transactions
+    description: transactions joined with users.country and users.acquisition_source.
+  - name: metricflow_time_spine
+    description: Daily date spine required by MetricFlow.
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        granularity: day

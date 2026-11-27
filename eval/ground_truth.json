@@ -1,0 +1,493 @@
+{
+  "db": "data/pockettoons.duckdb",
+  "questions": {
+    "E01": {
+      "value": 15057.0,
+      "tol": {
+        "rel": 0.01
+      }
+    },
+    "E02": {
+      "value": 2835.0,
+      "tol": {
+        "rel": 0.05
+      },
+      "facts": {
+        "snapshot_active": [
+          {
+            "count_star()": 2835
+          }
+        ]
+      }
+    },
+    "E03": {
+      "value": 8445.44999999911,
+      "tol": {
+        "rel": 0.03
+      }
+    },
+    "E04": {
+      "value": 595.0,
+      "tol": {
+        "rel": 0.1
+      },
+      "facts": {
+        "users_with_subscription_start_in_sep_snapshot": [
+          {
+            "count_star()": 593
+          }
+        ]
+      }
+    },
+    "E05": {
+      "value": 0.8336688475088072,
+      "tol": {
+        "abs": 0.01
+      }
+    },
+    "E06": {
+      "value": 2385.899999999943,
+      "tol": {
+        "rel": 0.03
+      },
+      "facts": {
+        "premium_ppv_revenue_q2": [
+          {
+            "sum(amount_usd)": 6059.5499999996
+          }
+        ]
+      }
+    },
+    "E07": {
+      "value": 0.04620622568093391,
+      "tol": {
+        "abs": 0.005
+      }
+    },
+    "E08": {
+      "value": -0.28335955359367737,
+      "tol": {
+        "abs": 0.01
+      },
+      "facts": {
+        "unlock_change": [
+          {
+            "((sum(amount_usd) FILTER (WHERE (date >= '2026-09-01')) / sum(amount_usd) FILTER (WHERE (date < '2026-09-01'))) - 1)": -0.6438072717
+          }
+        ],
+        "premium_change": [
+          {
+            "((sum(amount_usd) FILTER (WHERE (date >= '2026-09-01')) / sum(amount_usd) FILTER (WHERE (date < '2026-09-01'))) - 1)": 0.191314554
+          }
+        ]
+      }
+    },
+    "E09": {
+      "facts": {
+        "spend_growth_by_channel": [
+          {
+            "channel": "tiktok_ads",
+            "oct": 10580.42,
+            "jul": 3424.77
+          },
+          {
+            "channel": "influencer",
+            "oct": 8427.49,
+            "jul": 2838.96
+          },
+          {
+            "channel": "google_ads",
+            "oct": 5709.65,
+            "jul": 11266.4
+          },
+          {
+            "channel": "meta_ads",
+            "oct": 7045.19,
+            "jul": 13760.71
+          }
+        ]
+      }
+    },
+    "E10": {
+      "facts": {
+        "d30_by_cohort": [
+          {
+            "m": "2026-06-01T00:00:00.000",
+            "d30": 0.1312988845
+          },
+          {
+            "m": "2026-09-01T00:00:00.000",
+            "d30": 0.1224858998
+          }
+        ]
+      }
+    },
+    "E11": {
+      "facts": {
+        "paid_within_30d_by_channel": [
+          {
+            "acquisition_source": "google_ads",
+            "users": 1555,
+            "paid_30d": 0.2874598071
+          },
+          {
+            "acquisition_source": "influencer",
+            "users": 959,
+            "paid_30d": 0.1407716371
+          },
+          {
+            "acquisition_source": "meta_ads",
+            "users": 1600,
+            "paid_30d": 0.298125
+          },
+          {
+            "acquisition_source": "organic",
+            "users": 2125,
+            "paid_30d": 0.2348235294
+          },
+          {
+            "acquisition_source": "referral",
+            "users": 799,
+            "paid_30d": 0.2403003755
+          },
+          {
+            "acquisition_source": "tiktok_ads",
+            "users": 1314,
+            "paid_30d": 0.1369863014
+          }
+        ]
+      }
+    },
+    "E12": {
+      "facts": {
+        "cost_per_payer": [
+          {
+            "channel": "google_ads",
+            "spend": 16484.14,
+            "signups": 2516,
+            "cpi": 6.5517249603,
+            "payers_30d": 498.0,
+            "cost_per_payer_30d": 33.1006827309,
+            "payers_any": 526.0,
+            "cost_per_payer_any": 31.3386692015
+          },
+          {
+            "channel": "influencer",
+            "spend": 24739.6,
+            "signups": 5887,
+            "cpi": 4.2024120944,
+            "payers_30d": 610.0,
+            "cost_per_payer_30d": 40.5567213115,
+            "payers_any": 650.0,
+            "cost_per_payer_any": 38.0609230769
+          },
+          {
+            "channel": "meta_ads",
+            "spend": 20481.12,
+            "signups": 2784,
+            "cpi": 7.3567241379,
+            "payers_30d": 550.0,
+            "cost_per_payer_30d": 37.2384,
+            "payers_any": 588.0,
+            "cost_per_payer_any": 34.8318367347
+          },
+          {
+            "channel": "tiktok_ads",
+            "spend": 30419.93,
+            "signups": 8329,
+            "cpi": 3.6522907912,
+            "payers_30d": 809.0,
+            "cost_per_payer_30d": 37.6018912237,
+            "payers_any": 886.0,
+            "cost_per_payer_any": 34.334006772
+          }
+        ]
+      }
+    },
+    "E13": {
+      "facts": {
+        "latam_monthly": [
+          {
+            "month": "2026-06-01T00:00:00.000",
+            "mau": 2251,
+            "payers": 316,
+            "payer_rate": 0.1403820524,
+            "net_rev_as_stored": 2024.45
+          },
+          {
+            "month": "2026-07-01T00:00:00.000",
+            "mau": 2317,
+            "payers": 331,
+            "payer_rate": 0.1428571429,
+            "net_rev_as_stored": 2336.11
+          },
+          {
+            "month": "2026-08-01T00:00:00.000",
+            "mau": 2622,
+            "payers": 384,
+            "payer_rate": 0.1464530892,
+            "net_rev_as_stored": 2702.55
+          },
+          {
+            "month": "2026-09-01T00:00:00.000",
+            "mau": 3412,
+            "payers": 351,
+            "payer_rate": 0.1028722157,
+            "net_rev_as_stored": 2584.41
+          },
+          {
+            "month": "2026-10-01T00:00:00.000",
+            "mau": 3710,
+            "payers": 394,
+            "payer_rate": 0.1061994609,
+            "net_rev_as_stored": 3016.31
+          },
+          {
+            "month": "2026-11-01T00:00:00.000",
+            "mau": 3727,
+            "payers": 408,
+            "payer_rate": 0.1094714247,
+            "net_rev_as_stored": 3063.43
+          }
+        ]
+      }
+    },
+    "E14": {},
+    "E15": {},
+    "E16": {},
+    "E17": {
+      "value": 193339.16999996008,
+      "tol": {
+        "rel": 0.01
+      },
+      "facts": {
+        "naive_sum_as_stored": [
+          {
+            "sum(amount_usd)": 196400.4899999558
+          }
+        ]
+      }
+    },
+    "E18": {
+      "facts": {
+        "refund_rate_by_month": [
+          {
+            "month": "2026-06",
+            "refund_rate_count": 0.049214298,
+            "positive_refunds": 0
+          },
+          {
+            "month": "2026-07",
+            "refund_rate_count": 0.0468058191,
+            "positive_refunds": 0
+          },
+          {
+            "month": "2026-08",
+            "refund_rate_count": 0.0443183561,
+            "positive_refunds": 0
+          },
+          {
+            "month": "2026-09",
+            "refund_rate_count": 0.0539654796,
+            "positive_refunds": 0
+          },
+          {
+            "month": "2026-10",
+            "refund_rate_count": 0.0441206234,
+            "positive_refunds": 109
+          },
+          {
+            "month": "2026-11",
+            "refund_rate_count": 0.0483574781,
+            "positive_refunds": 125
+          }
+        ]
+      }
+    },
+    "E19": {
+      "facts": {
+        "payer_rate_by_platform_overall_and_within_country": [
+          {
+            "q2": false,
+            "platform": "android",
+            "market": "US",
+            "payer_rate": 0.473357417,
+            "user_months": 8858
+          },
+          {
+            "q2": false,
+            "platform": "ios",
+            "market": "US",
+            "payer_rate": 0.4694464414,
+            "user_months": 11128
+          },
+          {
+            "q2": false,
+            "platform": "web",
+            "market": "US",
+            "payer_rate": 0.4460236887,
+            "user_months": 2955
+          },
+          {
+            "q2": false,
+            "platform": "android",
+            "market": "new_markets",
+            "payer_rate": 0.1505070994,
+            "user_months": 12325
+          },
+          {
+            "q2": false,
+            "platform": "ios",
+            "market": "new_markets",
+            "payer_rate": 0.1420990566,
+            "user_months": 1696
+          },
+          {
+            "q2": false,
+            "platform": "web",
+            "market": "new_markets",
+            "payer_rate": 0.1510297483,
+            "user_months": 437
+          },
+          {
+            "q2": true,
+            "platform": "android",
+            "market": "US",
+            "payer_rate": 0.4250850639,
+            "user_months": 8523
+          },
+          {
+            "q2": true,
+            "platform": "ios",
+            "market": "US",
+            "payer_rate": 0.416506013,
+            "user_months": 10893
+          },
+          {
+            "q2": true,
+            "platform": "web",
+            "market": "US",
+            "payer_rate": 0.4193548387,
+            "user_months": 2728
+          },
+          {
+            "q2": true,
+            "platform": "android",
+            "market": "new_markets",
+            "payer_rate": 0.1105635649,
+            "user_months": 19075
+          },
+          {
+            "q2": true,
+            "platform": "ios",
+            "market": "new_markets",
+            "payer_rate": 0.0985347985,
+            "user_months": 2730
+          },
+          {
+            "q2": true,
+            "platform": "web",
+            "market": "new_markets",
+            "payer_rate": 0.1188811189,
+            "user_months": 715
+          }
+        ],
+        "failure_rate_by_method": [
+          {
+            "payment_method": "app_store",
+            "failed_share": 0.0377814615
+          },
+          {
+            "payment_method": "card",
+            "failed_share": 0.0350215517
+          },
+          {
+            "payment_method": "google_play",
+            "failed_share": 0.0375874667
+          }
+        ]
+      }
+    },
+    "E20": {
+      "facts": {
+        "q1_q2_revenue": [
+          {
+            "q1_as_stored": 99928.3400000237,
+            "q2_as_stored": 96472.1500000179,
+            "q1_corrected": 99928.3400000237,
+            "q2_corrected": 93410.8300000154
+          }
+        ]
+      }
+    },
+    "E21": {
+      "facts": {
+        "mau_q1_q2": [
+          {
+            "q1": 12466.3333333333,
+            "q2": 14888.0
+          }
+        ],
+        "revenue_q1_q2": [
+          {
+            "q1_as_stored": 99928.3400000237,
+            "q2_as_stored": 96472.1500000179,
+            "q2_corrected": 93410.8300000154
+          }
+        ],
+        "observed_free_limit_by_month": [
+          {
+            "m": "2026-06-01T00:00:00.000",
+            "observed_limit": 5
+          },
+          {
+            "m": "2026-07-01T00:00:00.000",
+            "observed_limit": 5
+          },
+          {
+            "m": "2026-08-01T00:00:00.000",
+            "observed_limit": 5
+          },
+          {
+            "m": "2026-09-01T00:00:00.000",
+            "observed_limit": 8
+          },
+          {
+            "m": "2026-10-01T00:00:00.000",
+            "observed_limit": 8
+          },
+          {
+            "m": "2026-11-01T00:00:00.000",
+            "observed_limit": 8
+          }
+        ],
+        "spend_share_tiktok_influencer": [
+          {
+            "m": "2026-06-01T00:00:00.000",
+            "share": 0.2028233479
+          },
+          {
+            "m": "2026-07-01T00:00:00.000",
+            "share": 0.2001777517
+          },
+          {
+            "m": "2026-08-01T00:00:00.000",
+            "share": 0.2824507501
+          },
+          {
+            "m": "2026-09-01T00:00:00.000",
+            "share": 0.5954469898
+          },
+          {
+            "m": "2026-10-01T00:00:00.000",
+            "share": 0.5984340147
+          },
+          {
+            "m": "2026-11-01T00:00:00.000",
+            "share": 0.6024128596
+          }
+        ]
+      }
+    }
+  }
+}

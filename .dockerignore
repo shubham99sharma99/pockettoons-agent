@@ -1,0 +1,13 @@
+**/__pycache__
+**/.pytest_cache
+data/*.duckdb
+data/*.sqlite
+data/*.wal
+dbt/target
+dbt/logs
+web/
+scratch/*
+!scratch/ca.crt
+outputs/
+report/
+.env

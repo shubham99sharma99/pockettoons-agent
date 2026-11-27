@@ -1,0 +1,127 @@
+version: 2
+
+# This file is the data dictionary. The agent's get_schema tool reads these
+# descriptions, so they must describe the schema only: never findings.
+
+models:
+  - name: users
+    description: One row per user who ever signed up. Includes users who signed up before the 6-month data window (the app launched 12 months ago). Subscription fields are a snapshot as of the last date in the data.
+    columns:
+      - name: user_id
+        description: Primary key.
+        data_tests: [unique, not_null]
+      - name: signup_date
+        description: Date the account was created (UTC).
+      - name: country
+        description: Country code. One of US, PH, ID, BR, MX.
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['US', 'PH', 'ID', 'BR', 'MX']}
+      - name: acquisition_source
+        description: How the user arrived. organic, referral, meta_ads, google_ads, tiktok_ads, influencer. Paid values match marketing_spend.channel.
+      - name: subscription_status
+        description: Snapshot on the last date in the data. active, cancelled or never.
+      - name: subscription_start
+        description: Start date of the most recent subscription. NULL if never subscribed.
+      - name: subscription_end
+        description: End date of the most recent subscription. NULL while active or if never subscribed.
+
+  - name: sessions
+    description: One row per app session.
+    columns:
+      - name: session_id
+        description: Primary key.
+        data_tests: [unique, not_null]
+      - name: user_id
+        description: FK to users.
+        data_tests:
+          - relationships:
+              arguments: {to: ref('users'), field: user_id}
+      - name: date
+        description: Session date (UTC).
+      - name: duration_sec
+        description: Session length in seconds.
+      - name: platform
+        description: ios, android or web.
+
+  - name: content_views
+    description: One row per episode started.
+    columns:
+      - name: view_id
+        description: Primary key.
+        data_tests: [unique, not_null]
+      - name: user_id
+        description: FK to users.
+      - name: content_id
+        description: FK to content_catalog.
+        data_tests:
+          - relationships:
+              arguments: {to: ref('content_catalog'), field: content_id}
+      - name: episode_number
+        description: Episode number within the title.
+      - name: date
+        description: View date (UTC).
+      - name: watch_duration_sec
+        description: Seconds watched.
+      - name: content_duration_sec
+        description: Episode length in seconds.
+      - name: view_type
+        description: "free (counts against the daily free-episode limit for non-subscribers), sub (watched as a subscriber), ppv (paid single-episode unlock)."
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['free', 'sub', 'ppv']}
+
+  - name: transactions
+    description: One row per charge attempt or refund.
+    columns:
+      - name: txn_id
+        description: Primary key.
+        data_tests: [unique, not_null]
+      - name: user_id
+        description: FK to users.
+      - name: date
+        description: Transaction date (UTC).
+      - name: created_at
+        description: Transaction timestamp (UTC).
+      - name: type
+        description: subscription, ppv or refund.
+        data_tests:
+          - accepted_values:
+              arguments: {values: ['subscription', 'ppv', 'refund']}
+      - name: amount_usd
+        description: "Amount in USD. Documented convention: charges are positive and refunds are stored as negative amounts."
+      - name: payment_method
+        description: app_store, google_play or card.
+      - name: status
+        description: success or failed. Failed rows are attempts that did not collect money.
+
+  - name: content_catalog
+    description: One row per title.
+    columns:
+      - name: content_id
+        description: Primary key.
+        data_tests: [unique, not_null]
+      - name: title
+        description: Title name.
+      - name: genre
+        description: Genre.
+      - name: total_episodes
+        description: Number of episodes.
+      - name: release_date
+        description: Date the title became available.
+      - name: content_tier
+        description: "standard: free-eligible within the daily free limit; beyond it an episode can be unlocked for $0.99. premium: subscription or $1.99 per-episode purchase only."
+
+  - name: marketing_spend
+    description: Daily paid-marketing spend by channel.
+    columns:
+      - name: date
+        description: Spend date (UTC).
+      - name: channel
+        description: meta_ads, google_ads, tiktok_ads or influencer. Same values as users.acquisition_source.
+      - name: spend_usd
+        description: Spend in USD.
+      - name: impressions
+        description: Ad impressions.
+      - name: clicks
+        description: Ad clicks.

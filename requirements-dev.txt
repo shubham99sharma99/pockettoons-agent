@@ -1,0 +1,7 @@
+-r requirements.txt
+# Build the warehouse and run tests
+dbt-core==1.12.7
+dbt-duckdb==1.11.1
+pytest==9.2.0
+httpx==0.28.1
+matplotlib==3.11.2           # report/build_report.py (board deck figures)

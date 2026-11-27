@@ -1,0 +1,155 @@
+version: 2
+
+# Governed metric definitions. `meta.sql` is a reference SQL template over the
+# analytics schema that the agent may adapt; `meta.caveat` lists checks the
+# definition depends on. Keep these generic: no expected values or findings.
+
+metrics:
+  - name: mau
+    label: Monthly active users
+    description: Distinct users with at least one session in a calendar month.
+    type: simple
+    type_params: {measure: active_users}
+    meta:
+      grain: month
+      sql: "SELECT date_trunc('month', date) AS month, COUNT(DISTINCT user_id) AS mau FROM sessions GROUP BY 1 ORDER BY 1"
+      quarterly: "Quarterly MAU = mean of the three monthly MAU values."
+
+  - name: dau
+    label: Daily active users
+    description: Distinct users with at least one session on a date.
+    type: simple
+    type_params: {measure: daily_active_users}
+    meta:
+      grain: day
+      sql: "SELECT date, COUNT(DISTINCT user_id) AS dau FROM sessions GROUP BY 1 ORDER BY 1"
+
+  - name: net_revenue
+    label: Net revenue
+    description: Sum of amount_usd over successful transactions (charges minus refunds).
+    type: simple
+    type_params: {measure: amount_usd_success}
+    meta:
+      grain: any
+      sql: "SELECT date_trunc('month', date) AS month, SUM(amount_usd) AS net_revenue FROM transactions WHERE status = 'success' GROUP BY 1 ORDER BY 1"
+      caveat: "Relies on the documented convention that refunds are stored as negative amounts. Verify the sign of refund amounts before trusting this number."
+
+  - name: gross_revenue
+    label: Gross revenue
+    description: Successful subscription and ppv charges, before refunds.
+    type: simple
+    type_params: {measure: gross_charges_usd}
+    meta:
+      grain: any
+      sql: "SELECT SUM(amount_usd) FROM transactions WHERE status = 'success' AND type IN ('subscription','ppv')"
+
+  - name: paying_users
+    label: Paying users
+    description: Distinct users with at least one successful subscription or ppv charge in the month.
+    type: simple
+    type_params: {measure: paying_users_m}
+    meta:
+      grain: month
+      sql: "SELECT month, COUNT(DISTINCT user_id) FILTER (WHERE is_payer) AS paying_users FROM fct_user_month GROUP BY 1 ORDER BY 1"
+
+  - name: payer_rate
+    label: Payer rate
+    description: Paying users divided by MAU, per month.
+    type: ratio
+    type_params: {numerator: paying_users, denominator: mau}
+    meta:
+      grain: month
+      sql: "SELECT month, COUNT(DISTINCT user_id) FILTER (WHERE is_payer) * 1.0 / COUNT(DISTINCT user_id) FILTER (WHERE is_active) AS payer_rate FROM fct_user_month GROUP BY 1 ORDER BY 1"
+      caveat: "Compare within segments (e.g. country) before reading a change as behaviour: mix shifts move the aggregate."
+
+  - name: arppu
+    label: Average revenue per paying user
+    description: Net revenue divided by paying users, per month.
+    type: ratio
+    type_params: {numerator: net_revenue_users, denominator: paying_users}
+    meta:
+      grain: month
+
+  - name: net_revenue_users
+    label: Net revenue (user-month model)
+    description: Net revenue summed from the user-month model; equals net_revenue.
+    type: simple
+    type_params: {measure: net_revenue_m}
+
+  - name: revenue_per_mau
+    label: Revenue per MAU
+    description: Net revenue divided by MAU, per month.
+    type: ratio
+    type_params: {numerator: net_revenue_users, denominator: mau}
+    meta:
+      grain: month
+
+  - name: new_users
+    label: New users
+    description: Users whose signup_date falls in the period.
+    type: simple
+    type_params: {measure: signup_count}
+    meta:
+      sql: "SELECT date_trunc('month', signup_date) AS month, acquisition_source, COUNT(*) AS new_users FROM users GROUP BY 1, 2 ORDER BY 1, 2"
+
+  - name: refund_rate
+    label: Refund rate
+    description: Refund rows divided by successful charges (count based; ignores amount sign).
+    type: ratio
+    type_params: {numerator: refunds, denominator: successful_charge_count}
+    meta:
+      sql: "SELECT date_trunc('month', date) AS month, COUNT(*) FILTER (WHERE type = 'refund') * 1.0 / COUNT(*) FILTER (WHERE status = 'success' AND type IN ('subscription','ppv')) AS refund_rate FROM transactions GROUP BY 1 ORDER BY 1"
+
+  - name: refunds
+    label: Refund count
+    description: Number of refund rows.
+    type: simple
+    type_params: {measure: refund_count}
+
+  - name: successful_charge_count
+    label: Successful charges
+    description: Successful subscription and ppv charges.
+    type: simple
+    type_params: {measure: successful_charges}
+
+  - name: charge_failure_rate
+    label: Charge failure rate
+    description: Failed charge attempts divided by all subscription/ppv charge attempts.
+    type: ratio
+    type_params: {numerator: failed_charge_count, denominator: charge_attempt_count}
+
+  - name: failed_charge_count
+    label: Failed charges
+    description: Failed charge attempts.
+    type: simple
+    type_params: {measure: failed_charges}
+
+  - name: charge_attempt_count
+    label: Charge attempts
+    description: All subscription and ppv charge attempts.
+    type: simple
+    type_params: {measure: charge_attempts}
+
+  - name: completion_rate
+    label: Completion rate
+    description: Watched seconds divided by episode seconds.
+    type: ratio
+    type_params: {numerator: watch_seconds_total, denominator: content_seconds_total}
+
+  - name: watch_seconds_total
+    label: Watch seconds
+    description: Seconds watched.
+    type: simple
+    type_params: {measure: watch_seconds}
+
+  - name: content_seconds_total
+    label: Content seconds
+    description: Episode seconds started.
+    type: simple
+    type_params: {measure: content_seconds}
+
+  - name: marketing_spend_usd
+    label: Marketing spend
+    description: Paid marketing spend in USD.
+    type: simple
+    type_params: {measure: spend}

@@ -1,0 +1,322 @@
+# Golden questions. DEVELOPER-ONLY: the agent never reads this file.
+#
+# Each question has:
+#   numeric:  reference SQL whose single value is the truth, plus a tolerance
+#             (rel = relative, abs = absolute). Scored against the agent's
+#             submitted headline_value.
+#   judge:    a rubric for the LLM judge (behaviour, framing, traps). Reference
+#             SQL in `facts` is run and its result is given to the judge.
+# A question passes when every scorer it defines passes.
+
+questions:
+  - id: E01
+    category: simple
+    question: What was MAU in October 2026?
+    numeric:
+      sql: SELECT COUNT(DISTINCT user_id) FROM sessions WHERE date BETWEEN '2026-10-01' AND '2026-10-31'
+      tol: {rel: 0.01}
+
+  - id: E02
+    category: simple
+    question: How many subscribers were active on 30 Nov 2026?
+    numeric:
+      # ledger view: latest successful subscription charge within the 30 days ending 30 Nov
+      sql: |
+        SELECT COUNT(DISTINCT user_id) FROM transactions
+        WHERE type = 'subscription' AND status = 'success' AND date > DATE '2026-11-30' - 30 AND date <= '2026-11-30'
+      tol: {rel: 0.05}
+    facts:
+      snapshot_active: SELECT COUNT(*) FROM users WHERE subscription_status = 'active'
+    judge: >
+      Pass if the answer gives an active-subscriber count close to the ledger or
+      snapshot value and states which definition it used (ledger of renewals vs the
+      users.subscription_status snapshot). Better answers cross-check both.
+
+  - id: E03
+    category: simple
+    question: What was total PPV revenue in Q2?
+    numeric:
+      sql: SELECT SUM(amount_usd) FROM transactions WHERE type = 'ppv' AND status = 'success' AND date BETWEEN '2026-09-01' AND '2026-11-30'
+      tol: {rel: 0.03}
+
+  - id: E04
+    category: filtered
+    question: How many US users started a subscription in September 2026?
+    numeric:
+      # a start = a successful subscription charge with no successful subscription charge in the prior 35 days
+      sql: |
+        WITH s AS (SELECT t.user_id, t.date FROM transactions t JOIN users u USING (user_id)
+                   WHERE u.country = 'US' AND t.type = 'subscription' AND t.status = 'success')
+        SELECT COUNT(DISTINCT a.user_id) FROM s a
+        WHERE a.date BETWEEN '2026-09-01' AND '2026-09-30'
+          AND NOT EXISTS (SELECT 1 FROM s b WHERE b.user_id = a.user_id AND b.date < a.date AND b.date >= a.date - 35)
+      tol: {rel: 0.10}
+    facts:
+      users_with_subscription_start_in_sep_snapshot: |
+        SELECT COUNT(*) FROM users WHERE country = 'US' AND subscription_start BETWEEN '2026-09-01' AND '2026-09-30'
+    judge: >
+      Pass if the count is close to the reference (new subscription starts, not renewals)
+      and the answer says how a "start" was defined. Counting renewals as starts is a fail.
+
+  - id: E05
+    category: filtered
+    question: What share of sessions in Brazil were on Android in November 2026?
+    numeric:
+      sql: |
+        SELECT AVG((s.platform = 'android')::INT) FROM sessions s JOIN users u USING (user_id)
+        WHERE u.country = 'BR' AND s.date BETWEEN '2026-11-01' AND '2026-11-30'
+      tol: {abs: 0.01}
+
+  - id: E06
+    category: filtered
+    question: Split Q2 PPV revenue into paywall unlocks and premium episodes.
+    numeric:
+      sql: SELECT SUM(amount_usd) FROM transactions WHERE type = 'ppv' AND status = 'success' AND amount_usd = 0.99 AND date BETWEEN '2026-09-01' AND '2026-11-30'
+      tol: {rel: 0.03}
+      note: headline_value should be the unlock (standard-episode) revenue
+    facts:
+      premium_ppv_revenue_q2: SELECT SUM(amount_usd) FROM transactions WHERE type = 'ppv' AND status = 'success' AND amount_usd = 1.99 AND date BETWEEN '2026-09-01' AND '2026-11-30'
+    judge: >
+      Pass if both parts are given and roughly match the facts (unlocks at $0.99 vs
+      premium at $1.99, or via a join of ppv views to content_catalog.content_tier).
+      The answer should note that transactions has no content_id and say how it split them.
+
+  - id: E07
+    category: time
+    question: How did MAU change from September to October 2026?
+    numeric:
+      sql: |
+        SELECT (COUNT(DISTINCT user_id) FILTER (WHERE date BETWEEN '2026-10-01' AND '2026-10-31'))*1.0 /
+               (COUNT(DISTINCT user_id) FILTER (WHERE date BETWEEN '2026-09-01' AND '2026-09-30')) - 1 FROM sessions
+      tol: {abs: 0.005}
+      note: headline_value as a fraction (0.05 = +5%)
+    judge: Pass if it gives both monthly values and the percentage change, matching the reference.
+
+  - id: E08
+    category: time
+    question: How did PPV revenue change from Q1 to Q2?
+    numeric:
+      sql: |
+        SELECT SUM(amount_usd) FILTER (WHERE date >= '2026-09-01') / SUM(amount_usd) FILTER (WHERE date < '2026-09-01') - 1
+        FROM transactions WHERE type = 'ppv' AND status = 'success'
+      tol: {abs: 0.01}
+      note: headline_value as a fraction
+    facts:
+      unlock_change: |
+        SELECT SUM(amount_usd) FILTER (WHERE date >= '2026-09-01') / SUM(amount_usd) FILTER (WHERE date < '2026-09-01') - 1
+        FROM transactions WHERE type = 'ppv' AND status = 'success' AND amount_usd = 0.99
+      premium_change: |
+        SELECT SUM(amount_usd) FILTER (WHERE date >= '2026-09-01') / SUM(amount_usd) FILTER (WHERE date < '2026-09-01') - 1
+        FROM transactions WHERE type = 'ppv' AND status = 'success' AND amount_usd = 1.99
+    judge: >
+      Pass if the direction and size match and the answer separates unlocks from
+      premium purchases (unlocks fell sharply, premium roughly flat). Stating only the
+      total without the split is a partial (fail if it misattributes the cause).
+
+  - id: E09
+    category: time
+    question: Which channel's spend grew most from July to October 2026?
+    facts:
+      spend_growth_by_channel: |
+        SELECT channel, SUM(spend_usd) FILTER (WHERE date BETWEEN '2026-10-01' AND '2026-10-31') AS oct,
+               SUM(spend_usd) FILTER (WHERE date BETWEEN '2026-07-01' AND '2026-07-31') AS jul
+        FROM marketing_spend GROUP BY 1 ORDER BY oct - jul DESC
+    judge: >
+      Pass if it names the channel with the largest increase (absolute dollars; also
+      fine if it reports relative growth and names the same leader or explains a difference),
+      with numbers matching the facts.
+
+  - id: E10
+    category: cohort
+    question: Compare D30 retention for the June and September 2026 signup cohorts.
+    facts:
+      d30_by_cohort: |
+        WITH c AS (SELECT user_id, signup_date, date_trunc('month', signup_date) AS m FROM users
+                   WHERE signup_date BETWEEN '2026-06-01' AND '2026-06-30' OR signup_date BETWEEN '2026-09-01' AND '2026-09-30')
+        SELECT m, AVG(CASE WHEN EXISTS (SELECT 1 FROM sessions s WHERE s.user_id = c.user_id
+                   AND s.date BETWEEN c.signup_date + 30 AND c.signup_date + 36) THEN 1 ELSE 0 END) AS d30
+        FROM c GROUP BY 1 ORDER BY 1
+    judge: >
+      Pass if both cohort values are within 1 percentage point of the facts (or the
+      answer clearly states a different retention definition and is consistent with
+      it) and it says which definition it used (e.g. any session on days 30-36).
+
+  - id: E11
+    category: cohort
+    question: What share of the August 2026 signup cohort paid within 30 days, by channel?
+    facts:
+      paid_within_30d_by_channel: |
+        WITH c AS (SELECT user_id, signup_date, acquisition_source FROM users WHERE signup_date BETWEEN '2026-08-01' AND '2026-08-31')
+        SELECT acquisition_source, COUNT(*) AS users,
+               AVG(CASE WHEN EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = c.user_id AND t.status = 'success'
+                    AND t.type IN ('subscription','ppv') AND t.date BETWEEN c.signup_date AND c.signup_date + 30) THEN 1 ELSE 0 END) AS paid_30d
+        FROM c GROUP BY 1 ORDER BY 1
+    judge: >
+      Pass if the per-channel shares are close to the facts (within ~1 pt) and the
+      answer points out which channels convert worst (tiktok_ads/influencer lower).
+
+  - id: E12
+    category: cohort
+    question: What was the cost per paying user by channel for Q2 signups?
+    facts:
+      cost_per_payer: |
+        WITH c AS (SELECT user_id, signup_date, acquisition_source FROM users WHERE signup_date BETWEEN '2026-09-01' AND '2026-11-30'),
+        p AS (SELECT acquisition_source, COUNT(*) AS signups,
+                     SUM(CASE WHEN EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = c.user_id AND t.status='success'
+                          AND t.type IN ('subscription','ppv') AND t.date BETWEEN c.signup_date AND c.signup_date + 30) THEN 1 ELSE 0 END) AS payers_30d,
+                     SUM(CASE WHEN EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = c.user_id AND t.status='success'
+                          AND t.type IN ('subscription','ppv') AND t.date >= c.signup_date) THEN 1 ELSE 0 END) AS payers_any
+              FROM c GROUP BY 1),
+        s AS (SELECT channel, SUM(spend_usd) AS spend FROM marketing_spend WHERE date BETWEEN '2026-09-01' AND '2026-11-30' GROUP BY 1)
+        SELECT channel, spend, signups, spend / signups AS cpi, payers_30d, spend / NULLIF(payers_30d, 0) AS cost_per_payer_30d,
+               payers_any, spend / NULLIF(payers_any, 0) AS cost_per_payer_any
+        FROM s JOIN p ON p.acquisition_source = s.channel ORDER BY 1
+    judge: >
+      Pass if it reports cost per paying user by paid channel consistent with the facts
+      (either payer window is fine if stated), and contrasts it with CPI: the channels
+      with the cheapest installs are not the cheapest per payer. Must state the payer
+      definition and note that recent cohorts have had less time to pay.
+
+  - id: E13
+    category: ambiguous
+    question: How are we doing in LatAm?
+    facts:
+      latam_monthly: |
+        WITH m AS (SELECT date_trunc('month', date) AS month, COUNT(DISTINCT s.user_id) AS mau
+                   FROM sessions s JOIN users u USING (user_id) WHERE u.country IN ('BR','MX') GROUP BY 1),
+        r AS (SELECT date_trunc('month', date) AS month, SUM(amount_usd) AS net_rev_as_stored,
+                     COUNT(DISTINCT user_id) FILTER (WHERE type IN ('subscription','ppv')) AS payers
+              FROM fct_transactions WHERE status = 'success' AND country IN ('BR','MX') GROUP BY 1)
+        SELECT month, mau, payers, payers * 1.0 / mau AS payer_rate, net_rev_as_stored FROM m JOIN r USING (month) ORDER BY 1
+    judge: >
+      Ambiguous question. Pass if the agent states its reading (LatAm = BR + MX; which
+      metrics and which period), answers with MAU, revenue and payer rate (or similar),
+      interprets the trend in a sentence (users up, monetisation per user down), and
+      offers an alternative reading. Fail if it only dumps a table or silently picks one metric.
+
+  - id: E14
+    category: ambiguous
+    question: Is the free tier too generous?
+    judge: >
+      Judgment question. Pass if it frames "generous" with evidence (how often users
+      reach the free allowance, conversion at the paywall, any change in the observed
+      allowance over time, retention), labels the conclusion as a judgment, and
+      suggests a test (e.g. an A/B test of the allowance) rather than asserting
+      causality. Fail if it overclaims or gives an opinion with no data.
+
+  - id: E15
+    category: unanswerable
+    question: What is revenue by user gender?
+    judge: >
+      Pass if it says there is no gender (or demographic) column, does NOT fabricate a
+      split or infer gender from names, and offers an available alternative cut (e.g.
+      country, channel) labelled as such. Any gender-level numbers = fail.
+
+  - id: E16
+    category: unanswerable
+    question: Why did subscribers cancel?
+    judge: >
+      Pass if it says there are no cancellation reason codes or surveys, offers
+      behavioural proxies (e.g. activity before cancelling, failed renewals vs
+      voluntary, tenure, country) clearly labelled as proxies, and avoids asserting
+      reasons as fact.
+
+  - id: E17
+    category: dq_trap
+    question: What was total net revenue from June to November 2026?
+    numeric:
+      sql: |
+        SELECT SUM(CASE WHEN type = 'refund' THEN -ABS(amount_usd) ELSE amount_usd END)
+        FROM transactions WHERE status = 'success' AND date BETWEEN '2026-06-01' AND '2026-11-30'
+      tol: {rel: 0.01}
+      note: corrected (refunds subtracted) net revenue
+    facts:
+      naive_sum_as_stored: SELECT SUM(amount_usd) FROM transactions WHERE status = 'success' AND date BETWEEN '2026-06-01' AND '2026-11-30'
+    judge: >
+      Data-quality trap. Pass only if the answer detects that some refunds are stored
+      with a positive amount (against the documented convention), reports a corrected
+      net revenue close to the reference, and quantifies the gap vs the as-stored sum.
+      Reporting the naive sum without flagging the issue = fail (missed DQ check).
+
+  - id: E18
+    category: dq_trap
+    question: What was the refund rate by month?
+    facts:
+      refund_rate_by_month: |
+        SELECT strftime(date, '%Y-%m') AS month,
+               COUNT(*) FILTER (WHERE type = 'refund') * 1.0 / COUNT(*) FILTER (WHERE status='success' AND type IN ('subscription','ppv')) AS refund_rate_count,
+               COUNT(*) FILTER (WHERE type = 'refund' AND amount_usd > 0) AS positive_refunds
+        FROM transactions GROUP BY 1 ORDER BY 1
+    judge: >
+      Pass if monthly refund rates are consistent with the facts (count based, roughly
+      in the 2-5% range with no clear trend), AND the answer flags that some refunds have positive amounts
+      from a certain month (so amount-based refund measures are wrong). Missing the sign
+      anomaly = fail.
+
+  - id: E19
+    category: dq_trap
+    question: Is Android checkout broken?
+    facts:
+      payer_rate_by_platform_overall_and_within_country: |
+        WITH up AS (SELECT user_id, any_value(platform) AS platform FROM sessions GROUP BY 1),
+        um AS (SELECT f.*, up.platform, f.month >= DATE '2026-09-01' AS q2 FROM fct_user_month f JOIN up USING (user_id) WHERE f.is_active)
+        SELECT q2, platform, CASE WHEN country = 'US' THEN 'US' ELSE 'new_markets' END AS market,
+               AVG(is_payer::INT) AS payer_rate, COUNT(*) AS user_months
+        FROM um GROUP BY ALL ORDER BY 1, 3, 2
+      failure_rate_by_method: |
+        SELECT payment_method, AVG((status='failed')::INT) AS failed_share FROM transactions WHERE type <> 'refund' GROUP BY 1 ORDER BY 1
+    judge: >
+      Simpson's-paradox trap. Pass if the agent concludes checkout is NOT broken: the
+      Android payer rate looks lower/declining overall, but within country (or market)
+      Android is in line with other platforms, payment failure rates are similar across
+      methods, and the gap is a mix effect (more Android users from low-paying markets).
+      Fail if it says Android checkout is broken.
+
+  - id: E20
+    category: premise_check
+    question: Why did revenue grow in Q2?
+    facts:
+      q1_q2_revenue: |
+        SELECT SUM(amount_usd) FILTER (WHERE date < '2026-09-01') AS q1_as_stored,
+               SUM(amount_usd) FILTER (WHERE date >= '2026-09-01') AS q2_as_stored,
+               SUM(CASE WHEN type='refund' THEN -ABS(amount_usd) ELSE amount_usd END) FILTER (WHERE date < '2026-09-01') AS q1_corrected,
+               SUM(CASE WHEN type='refund' THEN -ABS(amount_usd) ELSE amount_usd END) FILTER (WHERE date >= '2026-09-01') AS q2_corrected
+        FROM transactions WHERE status = 'success'
+    judge: >
+      False premise. Pass if the agent checks the premise and says revenue did not grow
+      (it fell, more so after correcting the refund sign issue), with numbers, and then
+      addresses what actually happened. Fail if it explains growth that did not happen.
+
+  - id: E21
+    category: end_to_end
+    question: MAU is up 20% QoQ but revenue is flat. Board meeting Thursday. Figure out what's happening and what we should do about it.
+    facts:
+      mau_q1_q2: |
+        WITH m AS (SELECT date_trunc('month', date) AS m, COUNT(DISTINCT user_id) AS mau FROM sessions GROUP BY 1)
+        SELECT AVG(mau) FILTER (WHERE m < '2026-09-01') AS q1, AVG(mau) FILTER (WHERE m >= '2026-09-01') AS q2 FROM m
+      revenue_q1_q2: |
+        SELECT SUM(amount_usd) FILTER (WHERE date < '2026-09-01') AS q1_as_stored,
+               SUM(amount_usd) FILTER (WHERE date >= '2026-09-01') AS q2_as_stored,
+               SUM(CASE WHEN type='refund' THEN -ABS(amount_usd) ELSE amount_usd END) FILTER (WHERE date >= '2026-09-01') AS q2_corrected
+        FROM transactions WHERE status = 'success'
+      observed_free_limit_by_month: |
+        SELECT date_trunc('month', date) AS m, MAX(free_views) AS observed_limit FROM fct_user_day GROUP BY 1 ORDER BY 1
+      spend_share_tiktok_influencer: |
+        SELECT date_trunc('month', date) AS m, SUM(spend_usd) FILTER (WHERE channel IN ('tiktok_ads','influencer')) / SUM(spend_usd) AS share
+        FROM marketing_spend GROUP BY 1 ORDER BY 1
+    judge: >
+      End-to-end investigation. Score against this answer key (developer ground truth):
+      (1) revenue is not flat: corrected Q2 net revenue fell ~5% while MAU rose ~20%;
+      (2) data issue: google_play refunds stored as positive from October inflate
+      reported Q2 revenue by ~2 points; (3) root cause: the daily free-episode
+      allowance rose from 5 to 8 on 1 Sep, so far fewer user-days hit the paywall and
+      payer rates fell in every country including the US (a control without mix change);
+      (4) root cause: acquisition budget moved from Meta/Google to TikTok/influencer
+      from mid-August, bringing many low-paying PH/ID/BR/MX users at the same $9.99
+      price (MAU up, payer rate down by mix); (5) interaction: new markets' payer rate
+      fell much more than the US; (6) ruled out: Android checkout (mix), content quality,
+      price changes, payment failures; (7) a bridge and specific recommendations with
+      owners and metrics (restate revenue + fix refund logging, test the free allowance,
+      judge channels by cost per payer, regional pricing). Pass if it gets (1), (2), (3)
+      and (4) substantially right, does not assert false causes, and gives actionable
+      recommendations. Score 0-10 by how many of the seven elements it covers well.

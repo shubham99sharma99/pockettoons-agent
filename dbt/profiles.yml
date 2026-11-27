@@ -1,0 +1,7 @@
+pockettoons:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('PT_DUCKDB_PATH', '../data/pockettoons.duckdb') }}"
+      threads: 4
