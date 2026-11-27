@@ -9,7 +9,12 @@ import json
 import os
 import re
 
-JUDGE_MODEL = os.environ.get("PT_JUDGE_MODEL", "claude-opus-5-5")
+from agent.nim import NIM_DEFAULT_MODEL
+
+# The judge follows the agent's provider unless PT_JUDGE_PROVIDER says otherwise.
+JUDGE_PROVIDER = (os.environ.get("PT_JUDGE_PROVIDER") or os.environ.get("PT_PROVIDER") or "anthropic").lower()
+JUDGE_MODEL = os.environ.get("PT_JUDGE_MODEL") or (
+    NIM_DEFAULT_MODEL if JUDGE_PROVIDER == "nim" else "claude-opus-5-5")
 FAILURE_TYPES = [
     "none", "wrong_metric_definition", "wrong_join_or_filter", "missed_dq_check",
     "mix_effect_read_as_behaviour", "overclaimed_causality", "hallucinated_column_or_value",
@@ -83,12 +88,47 @@ rubric's tolerance or a clearly stated alternative definition) and about traps n
 Do not reward length. If the answer passes, failure_type is "none"."""
 
 
-def judge(question: str, rubric: str, facts: dict | None, answer_md: str, client=None) -> dict:
-    import anthropic
-    client = client or anthropic.Anthropic()
-    prompt = (f"<question>\n{question}\n</question>\n\n<rubric>\n{rubric}\n</rubric>\n\n"
+def _judge_prompt(question: str, rubric: str, facts: dict | None, answer_md: str) -> str:
+    return (f"<question>\n{question}\n</question>\n\n<rubric>\n{rubric}\n</rubric>\n\n"
               f"<reference_facts>\n{json.dumps(facts or {}, indent=1, default=str)[:12000]}\n</reference_facts>\n\n"
               f"<agent_answer>\n{answer_md[:20000]}\n</agent_answer>\n\nGrade the answer.")
+
+
+def parse_verdict(text: str) -> dict:
+    """Extract and validate the judge's JSON verdict from free text (NIM path)."""
+    t = re.sub(r"<think>.*?</think>", "", text or "", flags=re.DOTALL)
+    start, end = t.find("{"), t.rfind("}")
+    if start < 0 or end <= start:
+        raise ValueError("judge reply has no JSON object")
+    v = json.loads(t[start:end + 1])
+    if not isinstance(v.get("pass"), bool):
+        raise ValueError("judge verdict lacks a boolean 'pass'")
+    try:
+        score = int(v.get("score", 0))
+    except (TypeError, ValueError):
+        score = 0
+    ft = v.get("failure_type")
+    return {"pass": v["pass"], "score": max(0, min(10, score)),
+            "failure_type": ft if ft in FAILURE_TYPES else ("none" if v["pass"] else "other"),
+            "rationale": str(v.get("rationale", ""))[:2000]}
+
+
+def _judge_nim(prompt: str, client=None) -> dict:
+    from agent.nim import NimLLM
+    llm = NimLLM(model=JUDGE_MODEL, max_tokens=1500, temperature=0.0, client=client)
+    schema_hint = (f"Reply with only a JSON object, no prose, with keys: pass (boolean), score (integer 0-10), "
+                   f"failure_type (one of {', '.join(FAILURE_TYPES)}), rationale (string).")
+    resp = llm.complete([{"role": "system", "content": JUDGE_SYSTEM + "\n\n" + schema_hint},
+                         {"role": "user", "content": prompt}])
+    return parse_verdict(resp.choices[0].message.content or "")
+
+
+def judge(question: str, rubric: str, facts: dict | None, answer_md: str, client=None) -> dict:
+    prompt = _judge_prompt(question, rubric, facts, answer_md)
+    if JUDGE_PROVIDER == "nim":
+        return _judge_nim(prompt, client)
+    import anthropic
+    client = client or anthropic.Anthropic()
     resp = client.messages.create(
         model=JUDGE_MODEL, max_tokens=4000, system=JUDGE_SYSTEM,
         messages=[{"role": "user", "content": prompt}],

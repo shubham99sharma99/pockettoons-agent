@@ -5,7 +5,8 @@
     python -m eval.run_eval --concurrency 4
 
 Writes eval/results/run_<timestamp>.json, eval/results/latest.json and
-eval/results.md (pass/fail table + failure analysis). Requires ANTHROPIC_API_KEY.
+eval/results.md (pass/fail table + failure analysis). Requires ANTHROPIC_API_KEY
+(or NVIDIA_API_KEY with PT_PROVIDER=nim).
 """
 from __future__ import annotations
 
@@ -22,6 +23,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from dotenv_lite import load_env  # noqa: E402
+
+load_env(ROOT / ".env")  # before importing scoring/agent: provider and model are read at import
+
 from eval import ground_truth as GT  # noqa: E402
 from eval import scoring  # noqa: E402
 
@@ -86,7 +90,7 @@ def run(ids: list[str] | None, concurrency: int, agent_factory=None, judge_fn=sc
 
 
 def summarise(rows: list[dict]) -> dict:
-    from agent.agent import DEFAULT_MODEL
+    from agent.agent import DEFAULT_MODEL, PROVIDER
     n = len(rows)
     passed = sum(r["pass"] for r in rows)
     by_cat: dict = {}
@@ -105,7 +109,7 @@ def summarise(rows: list[dict]) -> dict:
     toks_out = [r["agent"].get("usage", {}).get("output_tokens", 0) for r in rows if r["agent"].get("usage")]
     return {
         "run_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "model": DEFAULT_MODEL, "judge_model": scoring.JUDGE_MODEL,
+        "model": DEFAULT_MODEL, "provider": PROVIDER, "judge_model": scoring.JUDGE_MODEL,
         "n": n, "passed": passed, "pass_rate": round(passed / n, 3) if n else 0,
         "by_category": by_cat, "failure_types": fails,
         "median_latency_s": statistics.median(lat) if lat else None,
@@ -118,7 +122,7 @@ def summarise(rows: list[dict]) -> dict:
 
 def to_markdown(summary: dict) -> str:
     L = [f"# Eval results", "",
-         f"Run {summary['run_at']} · agent `{summary['model']}` · judge `{summary['judge_model']}`", "",
+         f"Run {summary['run_at']} · provider `{summary.get('provider', 'anthropic')}` · agent `{summary['model']}` · judge `{summary['judge_model']}`", "",
          f"**{summary['passed']} / {summary['n']} passed ({summary['pass_rate']:.0%}).** "
          f"Median latency {summary['median_latency_s']} s, median tool calls {summary['median_tool_calls']}, "
          f"median tokens in/out {summary['median_input_tokens']}/{summary['median_output_tokens']}.", "",

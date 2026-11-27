@@ -56,7 +56,7 @@ pip install -r requirements-dev.txt
 cp .env.example .env            # then put your key in .env (never commit it)
 
 make build    # generate data (DuckDB + SQLite), dbt build, recompute eval answer key (stop the API first: dbt needs a write lock)
-make test     # 59 tests: guardrails, tools, agent loop (scripted LLM), data story, leakage, API
+make test     # 68 tests: guardrails, tools, agent loop (scripted LLM), data story, leakage, API
 ```
 
 Ask questions (needs `ANTHROPIC_API_KEY` in `.env`):
@@ -82,9 +82,30 @@ python report/build_report.py
 npx @marp-team/marp-cli@4.2.3 report/board_deck.md --pdf --allow-local-files -o report/board_deck.pdf
 ```
 
-Configuration (`.env`): `PT_MODEL` (default `claude-opus-5-5`), `PT_EFFORT`
+Configuration (`.env`): `PT_PROVIDER` (`anthropic` default, or `nim`), `PT_MODEL` (default `claude-opus-5-5`, or the NIM default below), `PT_EFFORT`
 (`high`), `PT_JUDGE_MODEL`, `PT_MAX_TOOL_CALLS` (40), `PT_DUCKDB_PATH`
 (keep the file name `pockettoons.duckdb`: dbt views reference that catalog name).
+
+### Optional: NVIDIA NIM instead of Claude
+
+The agent can also run on open models hosted by NVIDIA NIM (OpenAI-compatible API, free
+for prototyping with an NVIDIA Developer account; check build.nvidia.com for current limits
+and terms). Use it to iterate cheaply; compare against a Claude run before choosing what to ship.
+
+```bash
+# .env
+PT_PROVIDER=nim
+NVIDIA_API_KEY=nvapi-...                       # from build.nvidia.com
+PT_NIM_MODEL=meta/llama-3.3-70b-instruct       # any NIM model that supports tool calling
+```
+
+`agent/nim.py` translates the conversation to chat-completions format and back, so the loop,
+budgets, SQL guard and citation check are the same for both providers. The eval judge follows
+`PT_PROVIDER` unless `PT_JUDGE_PROVIDER` is set (e.g. judge NIM answers with Claude for a fair
+comparison). Not available on the NIM path: adaptive thinking, effort, prompt caching and the
+server-side refusal fallback. Also optional: `PT_NIM_BASE_URL`, `PT_NIM_TEMPERATURE` (0.2),
+`PT_NIM_MAX_TOKENS` (4096). Expect weaker results than Claude on long investigations and
+data-quality traps; the eval shows by how much.
 
 ## Deploy
 
@@ -94,7 +115,7 @@ Configuration (`.env`): `PT_MODEL` (default `claude-opus-5-5`), `PT_EFFORT`
 2. Render → New → Blueprint → pick the repo. `render.yaml` creates a Docker web
    service. The image generates the data and runs `dbt build` at build time, so the
    DuckDB file is baked in and opened read-only.
-3. In the service's Environment tab set `ANTHROPIC_API_KEY`, set `ALLOWED_ORIGINS`
+3. In the service's Environment tab set `ANTHROPIC_API_KEY` (or `PT_PROVIDER=nim` and `NVIDIA_API_KEY`), set `ALLOWED_ORIGINS`
    to your Vercel URL (e.g. `https://pockettoons.vercel.app`), optionally
    `ALLOWED_ORIGIN_REGEX` for preview URLs, and `EVAL_ADMIN_TOKEN` to protect
    `POST /eval/run`.
@@ -136,7 +157,7 @@ Q2 revenue by about 3%.
 
 ## Status of this build
 
-Everything above was built and run in a cloud sandbox: data, dbt build, 59 tests,
+Everything above was built and run in a cloud sandbox: data, dbt build, 68 tests,
 the Docker image (built and smoke-tested), the Next.js production build, and the
 board deck. **The live agent run and the live eval were not run here because no
 API key was available in that environment.** Run `python cli.py --gm` and

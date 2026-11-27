@@ -1,4 +1,5 @@
-"""Planner + ReAct loop over the analytics tools, on the Claude Messages API.
+"""Planner + ReAct loop over the analytics tools, on the Claude Messages API
+(or NVIDIA NIM with PT_PROVIDER=nim; see agent/nim.py).
 
 The loop is written by hand (not the SDK tool runner) because it needs to:
   * stream progress events (text, tool calls, results) to the API's SSE endpoint;
@@ -16,13 +17,26 @@ from pathlib import Path
 from typing import Any, Callable, Protocol
 
 from . import tools as T
+from .nim import NIM_DEFAULT_MODEL, NIM_KEY_ENV
 
 PROMPTS = Path(__file__).resolve().parent / "prompts"
-DEFAULT_MODEL = os.environ.get("PT_MODEL", "claude-opus-5-5")
+# LLM provider: "anthropic" (default, Claude) or "nim" (NVIDIA NIM / OpenAI-compatible, see agent/nim.py)
+PROVIDER = os.environ.get("PT_PROVIDER", "anthropic").strip().lower()
+if PROVIDER not in ("anthropic", "nim"):
+    raise ValueError(f"PT_PROVIDER must be 'anthropic' or 'nim', got {PROVIDER!r}")
+_DEFAULT_MODELS = {"anthropic": "claude-opus-5-5", "nim": NIM_DEFAULT_MODEL}
+DEFAULT_MODEL = os.environ.get("PT_MODEL") or _DEFAULT_MODELS[PROVIDER]
+KEY_ENV = {"anthropic": "ANTHROPIC_API_KEY", "nim": NIM_KEY_ENV}[PROVIDER]
+
 DEFAULT_EFFORT = os.environ.get("PT_EFFORT", "high")
 MAX_TOOL_CALLS = int(os.environ.get("PT_MAX_TOOL_CALLS", "40"))
 MAX_SQL_CALLS = int(os.environ.get("PT_MAX_SQL_CALLS", "32"))
 MAX_TURNS = int(os.environ.get("PT_MAX_TURNS", "45"))
+
+
+def llm_configured() -> bool:
+    """True when the configured provider's API key is present."""
+    return bool(os.environ.get(KEY_ENV))
 
 Event = dict[str, Any]
 EventSink = Callable[[Event], None]
@@ -70,6 +84,15 @@ class AnthropicLLM:
             return stream.get_final_message()
 
 
+def make_llm(provider: str | None = None, model: str | None = None) -> LLM:
+    provider = (provider or PROVIDER).lower()
+    model = model or (DEFAULT_MODEL if provider == PROVIDER else _DEFAULT_MODELS[provider])
+    if provider == "nim":
+        from .nim import NimLLM
+        return NimLLM(model=model)
+    return AnthropicLLM(model=model)
+
+
 @dataclass
 class AgentResult:
     question: str
@@ -110,7 +133,7 @@ def _attr(b: Any, k: str) -> Any:
 class AnalyticsAgent:
     def __init__(self, llm: LLM | None = None, max_tool_calls: int = MAX_TOOL_CALLS,
                  max_sql_calls: int = MAX_SQL_CALLS, max_turns: int = MAX_TURNS):
-        self.llm = llm or AnthropicLLM()
+        self.llm = llm or make_llm()
         self.max_tool_calls = max_tool_calls
         self.max_sql_calls = max_sql_calls
         self.max_turns = max_turns

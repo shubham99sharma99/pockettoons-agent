@@ -7,7 +7,7 @@ data/*.wal
 web/node_modules/
 web/.next/
 scratch/
-.venv/
+.venv
 # Rebuilt deterministically by `make build` (and inside the Docker image); too big for GitHub (>100 MB)
 data/*.duckdb
 data/*.sqlite

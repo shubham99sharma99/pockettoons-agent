@@ -1,5 +1,6 @@
 # Runtime (API + agent + eval)
 anthropic==2.14.0
+openai==3.60.0          # optional NVIDIA NIM provider (OpenAI-compatible API)
 duckdb==2.0.1
 fastapi==0.165.0
 uvicorn[standard]==0.54.0

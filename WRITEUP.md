@@ -6,7 +6,9 @@ ships data tests (one of which, `assert_refunds_negative`, catches the planted b
 The agent is a Claude (Opus 5.5) tool-calling loop with nine tools: schema, metric
 catalog, playbook, column profile, guarded SQL, canned data-quality checks, a
 volume/mix/rate/price revenue bridge, a hypothesis register, and `submit_answer`,
-which rejects uncited numbers. Most accuracy comes from the semantic layer and the
+which rejects uncited numbers. An optional NVIDIA NIM provider (`agent/nim.py`) runs the same
+loop and guardrails on open models through an OpenAI-compatible API, for cheap iteration and a
+like-for-like comparison with Claude on the eval. Most accuracy comes from the semantic layer and the
 data-quality step, not from the model: the prompt tells it to verify conventions,
 compare within segments and decompose before explaining. Text-to-SQL alone fails the
 brief (no decomposition, no pivots); multi-agent setups were not worth the time.

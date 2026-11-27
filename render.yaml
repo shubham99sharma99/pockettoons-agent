@@ -7,8 +7,12 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     envVars:
+      - key: PT_PROVIDER
+        value: anthropic       # or "nim" to serve /ask from NVIDIA NIM
       - key: ANTHROPIC_API_KEY
         sync: false            # set in the Render dashboard, never committed
+      - key: NVIDIA_API_KEY
+        sync: false            # only needed when PT_PROVIDER=nim
       - key: ALLOWED_ORIGINS
         value: https://YOUR-APP.vercel.app
       - key: ALLOWED_ORIGIN_REGEX

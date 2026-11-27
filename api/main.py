@@ -11,7 +11,8 @@ Endpoints
   GET  /eval/status    status of the background eval run
 
 Config (environment)
-  ANTHROPIC_API_KEY       required for /ask and /eval/run
+  ANTHROPIC_API_KEY       required for /ask and /eval/run (PT_PROVIDER=anthropic, the default)
+  NVIDIA_API_KEY          required instead when PT_PROVIDER=nim (NVIDIA NIM, see agent/nim.py)
   ALLOWED_ORIGINS         comma-separated CORS origins (your Vercel domain)
   ALLOWED_ORIGIN_REGEX    optional regex, e.g. https://pockettoons-.*\\.vercel\\.app for previews
   ASK_RATE_PER_MIN        per-IP /ask limit (default 4); ASK_RATE_PER_DAY global daily cap (default 200)
@@ -42,7 +43,7 @@ load_env(ROOT / ".env")
 
 from agent import db, semantic  # noqa: E402
 from agent import tools as T  # noqa: E402
-from agent.agent import DEFAULT_MODEL, AnalyticsAgent  # noqa: E402
+from agent.agent import DEFAULT_MODEL, KEY_ENV, PROVIDER, AnalyticsAgent, llm_configured  # noqa: E402
 
 app = FastAPI(title="PocketToons Analytics Agent", version="1.0.0")
 
@@ -97,8 +98,8 @@ def client_ip(request: Request) -> str:
 
 
 def require_key():
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        raise HTTPException(503, "The server has no ANTHROPIC_API_KEY configured.")
+    if not llm_configured():
+        raise HTTPException(503, f"The server has no {KEY_ENV} configured.")
 
 
 # --------------------------------------------------------------------------- #
@@ -112,8 +113,8 @@ def health():
     except Exception as e:  # noqa: BLE001
         n, ok = str(e), False
     return {"status": "ok" if ok else "degraded", "sessions_rows": n, "model": DEFAULT_MODEL,
-            "database": "motherduck" if db.motherduck_database() else "local",
-            "llm_configured": bool(os.environ.get("ANTHROPIC_API_KEY"))}
+            "provider": PROVIDER, "database": "motherduck" if db.motherduck_database() else "local",
+            "llm_configured": llm_configured()}
 
 
 @app.get("/schema")

@@ -12,6 +12,7 @@ pytestmark = pytest.mark.needs_db
 def client(monkeypatch):
     import api.main as m
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
+    monkeypatch.setenv("NVIDIA_API_KEY", "test-key-not-real")
     from agent.agent import AnalyticsAgent
 
     def fake_agent():
@@ -62,8 +63,10 @@ def test_ask_rate_limited(client):
 
 
 def test_ask_without_key(client, monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY")
-    assert client.post("/ask", json={"question": "anything"}).status_code == 503
+    from agent.agent import KEY_ENV
+    monkeypatch.delenv(KEY_ENV)                       # the active provider's key
+    r = client.post("/ask", json={"question": "anything"})
+    assert r.status_code == 503 and KEY_ENV in r.json()["detail"]
 
 
 def test_eval_results_endpoint(client):
