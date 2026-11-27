@@ -29,3 +29,4 @@ E04 PASS (none) tools=34 sql=6 475.7s
 E06 PASS (none) tools=45 sql=2 717.5s
 E08 FAIL (wrong_number) tools=16 sql=9 473.9s
 E16 FAIL (loop_or_timeout) tools=47 sql=25 727.4s
+E17 PASS (none) tools=45 sql=6 616.4s

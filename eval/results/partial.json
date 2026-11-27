@@ -697,5 +697,49 @@
   "headline_value": null,
   "answer_markdown": null,
   "wall_s": 727.4
+ },
+ {
+  "id": "E17",
+  "category": "dq_trap",
+  "question": "What was total net revenue from June to November 2026?",
+  "numeric": {
+   "pass": true,
+   "truth": 193339.16999996008,
+   "candidates": [
+    2026.0,
+    193339.17,
+    196400.49
+   ],
+   "tol": {
+    "rel": 0.01
+   }
+  },
+  "judge": {
+   "pass": true,
+   "score": 10,
+   "failure_type": "none",
+   "rationale": "The answer passes the data-quality trap: it detects that Google Play refunds in October and November were stored as positive amounts (violating the documented negative-refund convention), reports the corrected net revenue of $193,339.17, and quantifies the gap versus the as-stored sum ($196,400.49 \u2212 $193,339.17 = $3,061.32). The raw sum matches the reference fact (196400.4899999558), and the corrected figure is internally consistent with the stated residual. It did not report the naive sum without flagging the issue."
+  },
+  "pass": true,
+  "failure_type": "none",
+  "agent": {
+   "stop": "max_turns",
+   "submitted": false,
+   "tool_calls": 45,
+   "sql_calls": 6,
+   "turns": 45,
+   "latency_s": 610.96,
+   "usage": {
+    "input_tokens": 994932,
+    "output_tokens": 30237,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+   },
+   "error": null
+  },
+  "headline": "**Answer:** Total net revenue from June to November 2026 was **$193,339.17** (corrected for refund sign convention). The raw sum using stored amounts is $196,400.49, but refunds via Google Play in October and November were stored as positive amounts, violating the documented convention that refunds ",
+  "headline_value": null,
+  "answer_markdown": "**Answer:** Total net revenue from June to November 2026 was **$193,339.17** (corrected for refund sign convention). The raw sum using stored amounts is $196,400.49, but refunds via Google Play in October and November were stored as positive amounts, violating the documented convention that refunds should be negative. (Q13, Q2, Q7)\n\n**How I measured it:** Net revenue = sum of `amount_usd` for successful transactions (`status = 'success'`) between 2026-06-01 and 2026-11-30, with refunds forced to negative (per documented convention: \"charges are positive and refunds are stored as negative amounts\"). Monthly breakdown (corrected):\n- Jun: $30,481.94\n- Jul: $33,672.72\n- Aug: $35,773.68\n- Sep: $30,571.70\n- Oct: $31,769.77\n- Nov: $31,069.36\n\n**Checks:** \n- Data quality check on `transactions` found refunds via `google_play` in Oct (109 rows) and Nov (125 rows) stored as positive amounts (Q7). All other refunds (app_store, card) are correctly negative.\n- No nulls, duplicate keys, or orphan user_ids (Q4, Q5, Q11).\n- Date coverage complete for the 6-month window (Q6).\n- Cross-checked with `fct_user_month.net_revenue` \u2014 matches raw (uncorrected) transactions sum (Q14), confirming the model uses stored signs.\n\n**Confidence:** High. The correction is a direct application of the documented sign convention, validated by the data-quality check that isolates the exact violating rows. The residual (raw \u2013 corrected = $3,061.32) equals the sum of those positive Google Play refunds.",
+  "wall_s": 616.4
  }
 ]
