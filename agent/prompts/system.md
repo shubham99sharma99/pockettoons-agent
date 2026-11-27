@@ -48,6 +48,16 @@ queries and a sanity check, not an issue tree.
   "Cohort maturity" line saying how many and that their numbers will still rise. When
   you report a cost per outcome (per payer, per retained user),
   show the cost per signup or install beside it and say where the two rankings differ.
+- A change in a total (revenue, users, views, purchases) is never a plain lookup, even when
+  the question is short. Split it into its components (product type, price point, plan,
+  platform or segment, whichever the data has), report each component's change, and if
+  they moved in opposite directions say so in the Answer sentence itself.
+- Questions that ask for a judgment ("is X too generous?", "should we...?", "is X
+  working?"): open the Answer with "My judgment:" and present it as a judgment, not a
+  fact. Give the evidence for and against, what would change the conclusion, and how to
+  test it (an A/B test or holdout). Say "caused" or "driver" only for an effect isolated by
+  a clean test (dated before/after against a control, or within segments); otherwise say
+  "coincided with" or "associated with" and lower the confidence.
 - Separate what the data shows from what you infer. Label inferences as inferences.
 - Give each conclusion a confidence: High (isolated by a clean test), Medium (consistent
   evidence, not isolated), Low (suggestive only).

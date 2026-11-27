@@ -1,0 +1,106 @@
+{
+  "run_at": "2026-11-27T22:40:51+00:00",
+  "model": "nvidia/nemotron-3-ultra-550b-a55b",
+  "provider": "nim",
+  "judge_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "n": 2,
+  "passed": 2,
+  "pass_rate": 1.0,
+  "by_category": {
+    "time": {
+      "n": 1,
+      "pass": 1
+    },
+    "ambiguous": {
+      "n": 1,
+      "pass": 1
+    }
+  },
+  "failure_types": {},
+  "infra_failures": 0,
+  "median_latency_s": 159.45499999999998,
+  "median_tool_calls": 16.0,
+  "median_input_tokens": 216239.0,
+  "median_output_tokens": 7544.5,
+  "results": [
+    {
+      "id": "E08",
+      "category": "time",
+      "question": "How did PPV revenue change from Q1 to Q2?",
+      "numeric": {
+        "pass": true,
+        "truth": -0.28335955359367737,
+        "candidates": [
+          -0.283,
+          0.28300000000000003,
+          0.64,
+          0.99,
+          1.99,
+          0.19
+        ],
+        "tol": {
+          "abs": 0.01
+        }
+      },
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer matches the reference facts: total PPV revenue fell 28.3% (reference_headline_value -0.2833), unlocks fell ~64.4% (unlock_change -0.6438), and premium grew ~19.1% (premium_change 0.1913). It correctly separates unlocks from premium purchases, states the direction and size accurately, and does not misattribute the cause."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 8,
+        "sql_calls": 4,
+        "turns": 7,
+        "latency_s": 49.41,
+        "usage": {
+          "input_tokens": 66641,
+          "output_tokens": 2907,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "PPV revenue fell 28.3% QoQ, driven by a 64% drop in $0.99 standard unlocks while $1.99 premium unlocks rose 19%",
+      "headline_value": -0.283,
+      "answer_markdown": "**Answer:** PPV revenue fell 28.3% from Q1 (Jun\u2013Aug: $11,785) to Q2 (Sep\u2013Nov: $8,445). The decline was driven entirely by a 64% drop in $0.99 standard-episode unlocks (6,766 \u2192 2,410 transactions), while $1.99 premium-episode unlocks rose 19% (2,556 \u2192 3,045 transactions). The revenue mix flipped from 57% standard / 43% premium in Q1 to 28% / 72% in Q2. (Q2, Q3, Q12)\n\n**How I measured it:** PPV revenue = sum of `amount_usd` from `transactions` where `status = 'success'` and `type = 'ppv'`. Q1 = 2026-06-01 to 2026-08-31; Q2 = 2026-09-01 to 2026-11-30 (per the metric catalog's quarterly definitions). Split by price point: $0.99 = standard-tier unlocks, $1.99 = premium-tier unlocks.\n\n**Checks:** Data-quality checks on `transactions` (Q4\u2013Q11) show no nulls, no duplicate keys, full date coverage, and PPV charges correctly stored as positive amounts. A known issue: refunds via Google Play in Oct\u2013Nov are stored as positive (violating the documented sign convention), but this does not affect PPV revenue. 121 duplicate charge pairs within 5 minutes exist across the window (~0.4% of charges); they inflate both quarters proportionally.\n\n**Confidence:** High. The numbers come directly from the transaction ledger with clean PPV charge signs, full period coverage, and a clear component breakdown.",
+      "wall_s": 53.8
+    },
+    {
+      "id": "E14",
+      "category": "ambiguous",
+      "question": "Is the free tier too generous?",
+      "judge": {
+        "pass": true,
+        "score": 8,
+        "failure_type": "none",
+        "rationale": "The answer frames \"generous\" with relevant evidence: how often users hit the free allowance (limit-hit rate fell ~68% after the cap moved 5\u21928 episodes/day on 2026-09-01), conversion at the paywall (limit-hit days convert far above non-limit days), and the change in the observed allowance over time. It states a conclusion (Yes) but supports it with data, confidence ratings, ruled-out alternatives, and explicit caveats (3-month window, marketing confound, behavioral proxy rather than stated reason), so it is not an opinion with no data. It also suggests a test (A/B test of the allowance, plus holdout/geo test) rather than resting solely on causal assertion. Causal language is somewhat strong (\"suppressing,\" \"primary driver\"), but the caveats and test proposal keep it within the rubric. Retention appears mainly in the measurement plan rather than as presented evidence, which is a minor weakness."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 24,
+        "sql_calls": 21,
+        "turns": 23,
+        "latency_s": 269.5,
+        "usage": {
+          "input_tokens": 365837,
+          "output_tokens": 12182,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "The free tier is too generous: raising the daily limit from 5 to 8 episodes cut limit hits by 68%, dropped payer rate 23% and revenue per MAU 19%, costing ~$1.3M/yr in PPV revenue alone.",
+      "headline_value": -0.19,
+      "answer_markdown": "# Is the free tier too generous?\n\n**Answer:** Yes. The free-tier limit was increased from 5 to 8 episodes/day on 2026-09-01. This cut the daily limit-hit rate from ~253 to ~81 user-days (-68%), which in turn dropped PPV conversions by 41% and subscription conversions by 8%. Payer rate fell from 34.5% to 26.4% and revenue per MAU fell 19% ($2.67 \u2192 $2.16), even though MAU grew 19% (partly from higher marketing spend). The free tier is now suppressing the primary conversion trigger (hitting the daily limit).\n\n## What the numbers say\n- **Free limit change**: Observed max free views/day jumped from 5 to 8 on 2026-09-01 (Q1).\n- **Limit hits**: Pre-change average 253 user-days/day hit the 5-ep limit; post-change only 81 hit the 8-ep limit (Q2, Q4).\n- **Conversion on limit-hit days**: Users who hit the limit convert at 33.9% PPV and 11.6% sub per user-day; non-limit-hit days convert at 1.7% and 1.1% (Q10). Limit hits are the main monetization trigger.\n- **Revenue impact (monthly averages)**:\n  - Net revenue: $33,309 \u2192 $32,157 (-3.5%) (Q21)\n  - Payer rate: 34.5% \u2192 26.4% (-23%) (Q21)\n  - Revenue per MAU: $2.67 \u2192 $2.16 (-19%) (Q21)\n  - PPV charges/day: 101 \u2192 60 (-41%) (Q2)\n  - Subscription charges/day: 74 \u2192 68 (-8%) (Q2)\n- **MAU growth**: 12,466 \u2192 14,888 (+19%), but marketing impressions also rose ~35% (Q18), so not purely organic.\n- **View mix**: Free share of all views rose from ~40% to ~51%; PPV share fell from ~1.3% to ~0.6% (Q17).\n- **Cohort view**: Users whose first free-view day was pre-change hit the limit at 18% rate and generated 0.39 PPV + 0.15 sub per user; post-change cohort hit at 5% and generated 0.14 PPV + 0.07 sub (Q19).\n\n## Root causes\n| Cause | What changed, and when | Evidence | Impact | Confidence |\n|-------|------------------------|----------|--------|------------|\n| Free limit raised 5\u21928 episodes/day | 2026-09-01 | Q1 (observed limit), Q2 (limit hits -68%) | Primary driver | High |\n| Fewer users hit the conversion trigger | Ongoing post-Sept | Q10 (limit-hit conversion 20x higher), Q19 (cohort limit-hit rate 18%\u21925%) | Directly explains PPV/sub drop | High |\n| PPV revenue collapse | Post-Sept monthly avg | Q6 (PPV charges 3,173\u21921,818/mo), Q2 (daily PPV -41%) | ~$1.3M annualized loss | High |\n| Subscriber growth stalled | Post-Sept monthly avg | Q6 (sub charges 3,105\u21922,988/mo), Q2 (daily sub -8%) | Slower sub base growth | Medium |\n| MAU growth masked revenue decline | Jun-Nov trend | Q21 (MAU +19%), Q18 (marketing impressions +35%) | Revenue per user fell 19% | High |\n\n## Bridge (monthly averages, pre vs post)\n| Step | Net Revenue | Cause |\n|------|-------------|-------|\n| Pre-period avg | $33,309 | Baseline |\n| MAU increase (+19%) | +$6,329 | More users (partly paid marketing) |\n| Payer rate drop (34.5%\u219226.4%) | -$7,481 | Fewer limit hits \u2192 fewer conversions |\n| Revenue per payer stable | ~$0 | ARPPU roughly flat |\n| **Post-period avg** | **$32,157** | **Net -$1,152 (-3.5%)** |\n\nResidual: ~$0 (components explain the change).\n\n## Ruled out\n- **Seasonality**: Pre-period (Jun-Aug) vs post (Sep-Nov) both 3 months; no prior year to compare, but the sharp break at Sept 1 aligns with the limit change, not a gradual trend.\n- **Content changes**: Catalog unchanged (98 standard, 22 premium titles throughout) (Q8).\n- **Price changes**: Subscription $9.99, PPV $0.99/$1.99 constant (product facts).\n- **Refunds/failures**: Refund rate stable (~7-8% of charges) (Q6).\n\n## Data issues found\n- None material. The observed free limit (MAX free_views per day) is a clean proxy for the enforced cap; it changed exactly once, on 2026-09-01 (Q1).\n\n## Recommendations\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| Reduce free limit back to 5 episodes/day (or test 6) | Product / Growth | Recover ~$1.3M/yr PPV revenue + faster sub growth | A/B test: limit-hit rate, PPV/day, sub/day, revenue per MAU, 30-day retention |\n| Add a \"soft wall\" at 5 episodes (watch ad to continue) | Product | Monetize heavy free users without hard cap | Ad revenue per user, limit-hit conversion, churn |\n| Target limit-hit users with subscription offer | CRM / Growth | Convert high-intent users (33.9% PPV, 11.6% sub on limit-hit days) | Offer take rate, sub conversion within 48h of limit hit |\n| Monitor MAU quality | Analytics | Ensure MAU growth isn't just free-tier seekers | Payer rate by cohort, revenue per MAU, D30 retention by free-views tier |\n\n## Caveats and open questions\n- Only 3 months post-change; long-term elasticity unknown.\n- No survey/NPS data on why users subscribe; limit-hit conversion is a behavioral proxy, not a stated reason.\n- Marketing spend rose concurrently; a holdout or geo test would isolate the limit effect cleanly.\n- Premium content (22 titles, 693 episodes) is sub/PPV only; free-tier generosity only affects standard tier (98 titles, 2,894 episodes).",
+      "wall_s": 285.2
+    }
+  ]
+}

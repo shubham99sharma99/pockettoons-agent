@@ -1,0 +1,106 @@
+{
+  "run_at": "2026-11-27T22:43:51+00:00",
+  "model": "nvidia/nemotron-3-ultra-550b-a55b",
+  "provider": "nim",
+  "judge_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "n": 2,
+  "passed": 2,
+  "pass_rate": 1.0,
+  "by_category": {
+    "time": {
+      "n": 1,
+      "pass": 1
+    },
+    "ambiguous": {
+      "n": 1,
+      "pass": 1
+    }
+  },
+  "failure_types": {},
+  "infra_failures": 0,
+  "median_latency_s": 108.88,
+  "median_tool_calls": 14.5,
+  "median_input_tokens": 231717.0,
+  "median_output_tokens": 6526.5,
+  "results": [
+    {
+      "id": "E08",
+      "category": "time",
+      "question": "How did PPV revenue change from Q1 to Q2?",
+      "numeric": {
+        "pass": true,
+        "truth": -0.28335955359367737,
+        "candidates": [
+          -0.283,
+          0.28300000000000003,
+          1.0,
+          11785.0,
+          2.0,
+          8445.0
+        ],
+        "tol": {
+          "abs": 0.01
+        }
+      },
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer matches the reference facts: headline PPV revenue fell ~28.3% (reference_headline_value -0.2834), standard unlocks fell ~64% (unlock_change -0.6438), and premium unlocks rose ~19% (premium_change 0.1913). It correctly separates unlocks from premium purchases and attributes the decline appropriately, satisfying the rubric."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 8,
+        "sql_calls": 5,
+        "turns": 8,
+        "latency_s": 47.13,
+        "usage": {
+          "input_tokens": 72609,
+          "output_tokens": 3390,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "Gross PPV revenue fell 28.3% QoQ (Q1 $11,785 \u2192 Q2 $8,445), driven by a 64% drop in $0.99 standard unlocks; premium unlocks rose 19%.",
+      "headline_value": -0.283,
+      "answer_markdown": "**Answer:** Gross PPV revenue fell 28.3% from $11,785 in Q1 (Jun\u2013Aug) to $8,445 in Q2 (Sep\u2013Nov). The decline was driven entirely by a 64% drop in $0.99 standard-episode unlocks (6,766 \u2192 2,410 transactions), while $1.99 premium-episode unlocks rose 19% (2,556 \u2192 3,045). PPV refunds also fell sharply ($4,903 \u2192 $1,524), so net PPV revenue (after refunds) was roughly flat at ~$6,880 vs ~$6,920. (Q2, Q3, Q4, Q5)\n\n**How I measured it:**  \n- **Metric:** Gross PPV revenue = sum of `amount_usd` from `transactions` where `status = 'success'` and `type = 'ppv'`.  \n- **Periods:** Q1 = 2026-06-01 to 2026-08-31; Q2 = 2026-09-01 to 2026-11-30 (per the metric catalog's `q1` and `q2` definitions).  \n- **Split:** Price points inferred from `amount_usd` ($0.99 = standard unlock, $1.99 = premium unlock). Refunds shown separately.\n\n**Checks:**  \n- Verified quarter definitions against the metric catalog (Q2).  \n- Confirmed no other `type` values contribute to PPV revenue (Q5).  \n- Monthly trend shows the drop occurred at the Q1\u2192Q2 boundary (June\u2013Aug ~$4k/mo \u2192 Sep\u2013Nov ~$2.8k/mo) (Q3).\n\n**Confidence:** High \u2014 direct aggregation from the source transaction table with clear period definitions.",
+      "wall_s": 53.9
+    },
+    {
+      "id": "E14",
+      "category": "ambiguous",
+      "question": "Is the free tier too generous?",
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer passes the rubric. It frames 'generous' with concrete evidence: limit-hit rate (how often users reach the allowance), purchase rate at the paywall, the observed allowance change from 5 to 8 episodes/day, and retention is addressed in the caveats/open questions. It explicitly labels the conclusion as a judgment ('My judgment: Yes...') and does not assert causality\u2014it notes the limit increase and acquisition shift happened simultaneously and states an A/B test is needed to isolate the pure limit effect. It also recommends a specific A/B test (5 vs 8 vs 3 episodes/day) rather than claiming causality outright. No overclaiming or unsupported opinion is present."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 21,
+        "sql_calls": 18,
+        "turns": 20,
+        "latency_s": 170.63,
+        "usage": {
+          "input_tokens": 390825,
+          "output_tokens": 9663,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "The 8-episode free limit is too generous for the US; the Sep increase from 5 to 8 cut limit-hit rate 77%, purchase rate 56%, and revenue/MAU 19%, though acquisition mix shift and new-market growth also drove the payer-rate decline.",
+      "headline_value": -0.19,
+      "answer_markdown": "# Is the free tier too generous?\n\n**Answer:** My judgment: **Yes, the current 8-episode daily free limit is too generous for the US market, and the September increase from 5 to 8 episodes/day coincided with a meaningful revenue decline.** However, the larger driver of the payer-rate drop is a simultaneous shift in acquisition mix toward lower-quality channels (influencer, TikTok) and fast-growing but poorly-monetizing new markets. For non-US markets, even the old 5-episode limit was rarely binding, so generosity there is less the issue than fundamental willingness to pay.\n\n## What the numbers say\n\n| Metric | Jun\u2013Aug (limit=5) | Sep\u2013Nov (limit=8) | Change |\n|--------|-------------------|-------------------|--------|\n| Observed free limit (episodes/day) | 5 | 8 | +60% |\n| Limit-hit rate (of free-view days) | 21.7% | 5.1% | **\u201377%** |\n| Purchase rate per free-view day | 11.8% | 5.2% | **\u201356%** |\n| Purchase rate per limit-hit day | 54.4% | 102% | +88% (fewer hits) |\n| Avg free views per free-view day | 2.80 | 3.07 | +10% |\n| Payer rate (paying users / MAU) | 34.8% | 26.3% | **\u201324%** |\n| Revenue per MAU | $2.67 | $2.16 | **\u201319%** |\n| Monthly PPV revenue | ~$3.9M | ~$2.8M | **\u201328%** |\n| Monthly subscription revenue | ~$31.0M | ~$29.8M | \u20134% |\n| Total views per active day | 3.24 | 3.29 | +1% |\n| Watch seconds per active day | 2,692 | 2,733 | +2% |\n\n**Key behavioral shift (Q18):** After the limit increase, free views rose from 1.32 to 1.62 per active day (+23%), while sub views fell from 1.88 to 1.64 (\u201313%) and PPV views fell from 0.041 to 0.020 (\u201352%). Users substituted free views for paid views; total engagement barely moved.\n\n**Country split (Q14, Q15, Q16):**\n- **US:** Limit-hit rate fell from 23.5% to 7.7%; purchase rate on free-view days fell from 19.4% to 10.1%. US still generates ~85% of revenue.\n- **New markets (BR, ID, MX, PH):** Limit-hit rate was already low (19\u201320%) at 5 episodes and dropped to 3.1\u20133.4% at 8 episodes. Purchase rates are 1.7\u20131.8% regardless of limit. These markets drove MAU growth (11.9K \u2192 15.2K) but contribute <5% of revenue.\n\n**Acquisition mix shift (Q12, Q17):** In Sep\u2013Nov, influencer and TikTok installs surged (influencer: ~2K \u2192 ~2.8K/mo; TikTok: ~1.3K \u2192 ~2.8K/mo). These channels have payer rates of only 13\u201315% (vs 30\u201342% for organic, Google, Meta). The mix shift alone explains a large share of the aggregate payer-rate decline.\n\n## Root causes\n\n| Cause | What changed, and when | Evidence | Impact | Confidence |\n|-------|------------------------|----------|--------|------------|\n| Free limit increase (5\u21928) | Sep 1, 2026 | Limit-hit rate \u201377%; purchase rate per free-view day \u201356%; PPV revenue \u201328%; sub views \u201313% (Q2, Q8, Q9, Q10, Q18) | Directly reduced conversion pressure; ~$1.1M/mo PPV loss + sub cannibalization | **High** |\n| Acquisition mix shift | Sep\u2013Nov 2026 | Influencer + TikTok share of installs rose from ~22% to ~38%; their payer rates 13\u201315% vs 30\u201342% for paid search/organic (Q12, Q17) | Explains much of the aggregate payer-rate drop; new users from these channels monetize poorly | **High** |\n| New-market growth | Jun\u2013Nov 2026 | Non-US MAU grew 2.3x (4.5K \u2192 10.4K); non-US revenue share stayed <5% (Q15, Q16) | Dilutes aggregate payer rate and revenue/MAU; not caused by free limit | **High** |\n| Seasonality / other | Sep\u2013Nov | No clean control; US payer rate also fell (34.8% \u2192 26.3%) even excluding mix (Q17) | Residual ~3\u20134 pp payer-rate drop in US after accounting for limit increase | **Medium** |\n\n## Bridge (monthly-average net revenue per MAU, index Jun\u2013Aug = 100)\n\n| Step | Index points | Cause |\n|------|--------------|-------|\n| Jun\u2013Aug baseline | 100.0 | \u2014 |\n| Free limit 5\u21928 (US) | \u201312 to \u201315 | Lower PPV conversion, sub cannibalization (Q9, Q10, Q18) |\n| Acquisition mix shift | \u20138 to \u201310 | Influx of low-payer-rate channels (Q12, Q17) |\n| New-market dilution | \u20135 to \u20137 | MAU growth from near-zero-revenue countries (Q15, Q16) |\n| Residual / other | \u20132 to \u20133 | Seasonality, product changes, noise |\n| Sep\u2013Nov actual | ~72 | **\u201328% vs baseline** (matches observed $2.67 \u2192 $2.16) |\n\n## Ruled out\n- **Engagement collapse:** Total views and watch time were flat (Q11, Q18). The free tier did not drive *more* engagement, only *more free* engagement.\n- **Price increase:** Subscription price ($9.99) and PPV prices ($0.99/$1.99) unchanged.\n- **Technical issues:** No spike in charge failures or refunds (Q5 shows stable refund rates).\n\n## Data issues found\n- The \"observed free limit\" is inferred as MAX(free_views) per day (Q2). It assumes at least one user hits the cap daily, which holds (200\u2013300 limit-hit days/day before, 60\u2013110 after).\n- fct_user_day includes subscriber days; free_views for subscribers are 0. The limit-hit analysis filters to free_views > 0, so it reflects non-subscriber behavior.\n- Cohort maturity: Sep\u2013Nov signups have not all reached 90-day maturity; payer rates for those cohorts will rise slightly.\n\n## Recommendations\n\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| **A/B test 5 vs 8 vs 3 free episodes/day in US** | Product / Growth | ~$1.1M/mo PPV + sub uplift if 5 is optimal | Payer rate, revenue/MAU, retention at 30/90 days; guardrail: watch time |\n| **Cap free tier at 5 episodes for new US users; grandfather existing** | Product | Limits backlash; tests causality cleanly | Same metrics vs control |\n| **Re-balance acquisition spend away from influencer/TikTok toward Google/Meta/organic** | UA / Marketing | Current mix costs ~$2.50/install but yields 13\u201315% payer rate vs 35\u201342% | CPI, 30-day payer rate, LTV/CAC by channel |\n| **Develop market-specific monetization (ads, lower price tiers) for BR/ID/MX/PH** | Product / Intl | 10.4M MAU in new markets generating <$0.05/MAU/mo | Revenue/MAU by country; ad ARPU if ads launched |\n| **Add \"soft limit\" messaging at 5 episodes (even if cap is 8)** | Product | Recaptures some conversion pressure without hard cap | Limit-hit rate, purchase rate at 5-episode threshold |\n\n## Caveats and open questions\n- **Causality:** The limit increase and acquisition shift happened simultaneously (Sep 1). The A/B test is needed to isolate the pure limit effect.\n- **Long-term retention:** A tighter free limit might reduce 90-day retention. The test must track retention, not just first-month payer rate.\n- **Premium content:** 22 premium titles (693 episodes) are never free-eligible (Q3). Their PPV revenue ($1.99/ep) is small but could be grown.\n- **Ad-supported tier:** Not in data; could unlock revenue in low-willingness-to-pay markets.",
+      "wall_s": 179.4
+    }
+  ]
+}

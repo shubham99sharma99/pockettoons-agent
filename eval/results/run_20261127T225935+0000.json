@@ -1,0 +1,827 @@
+{
+  "run_at": "2026-11-27T22:59:35+00:00",
+  "model": "nvidia/nemotron-3-ultra-550b-a55b",
+  "provider": "nim",
+  "judge_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "n": 21,
+  "passed": 20,
+  "pass_rate": 0.952,
+  "by_category": {
+    "simple": {
+      "n": 3,
+      "pass": 3
+    },
+    "filtered": {
+      "n": 3,
+      "pass": 3
+    },
+    "time": {
+      "n": 3,
+      "pass": 3
+    },
+    "cohort": {
+      "n": 3,
+      "pass": 3
+    },
+    "ambiguous": {
+      "n": 2,
+      "pass": 2
+    },
+    "unanswerable": {
+      "n": 2,
+      "pass": 1
+    },
+    "dq_trap": {
+      "n": 3,
+      "pass": 3
+    },
+    "premise_check": {
+      "n": 1,
+      "pass": 1
+    },
+    "end_to_end": {
+      "n": 1,
+      "pass": 1
+    }
+  },
+  "failure_types": {
+    "other": 1
+  },
+  "infra_failures": 0,
+  "median_latency_s": 41.52,
+  "median_tool_calls": 8,
+  "median_input_tokens": 69392,
+  "median_output_tokens": 2921,
+  "results": [
+    {
+      "id": "E01",
+      "category": "simple",
+      "question": "What was MAU in October 2026?",
+      "numeric": {
+        "pass": true,
+        "truth": 15057.0,
+        "candidates": [
+          15057.0,
+          2026.0,
+          15057.0
+        ],
+        "tol": {
+          "rel": 0.01
+        }
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 4,
+        "sql_calls": 1,
+        "turns": 4,
+        "latency_s": 13.34,
+        "usage": {
+          "input_tokens": 29389,
+          "output_tokens": 995,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "MAU in October 2026 was 15,057 users",
+      "headline_value": 15057.0,
+      "answer_markdown": "**Answer:** MAU in October 2026 was 15,057 users. (Q1)\n\n**How I measured it:** Monthly Active Users (MAU) is defined as distinct users with at least one session in a calendar month. I queried the `sessions` table for October 2026 (month = 2026-10-01) and counted distinct `user_id` values.\n\n**Checks:** The data window in the metric catalog runs from 2026-06-01 to 2026-11-30, so October 2026 is a complete month within the window. No data-quality issues were flagged for the sessions table.\n\n**Confidence:** High \u2014 direct count from the sessions table using the governed MAU definition.",
+      "wall_s": 13.6
+    },
+    {
+      "id": "E02",
+      "category": "simple",
+      "question": "How many subscribers were active on 30 Nov 2026?",
+      "numeric": {
+        "pass": true,
+        "truth": 2835.0,
+        "candidates": [
+          2835.0,
+          2835.0,
+          30.0,
+          2026.0
+        ],
+        "tol": {
+          "rel": 0.05
+        }
+      },
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer reports 2,835 active subscribers on 30 Nov 2026, which matches the reference snapshot value of 2835 exactly. It clearly states the definition used (users.subscription_status = 'active' with the subscription period covering 30 Nov 2026) and cross-checks both the users table snapshot and the fct_user_month ledger/payer count, satisfying the rubric's pass criteria and its 'better answer' cross-check guidance."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 6,
+        "sql_calls": 4,
+        "turns": 6,
+        "latency_s": 27.32,
+        "usage": {
+          "input_tokens": 34334,
+          "output_tokens": 1605,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "2,835 active subscribers on 30 Nov 2026",
+      "headline_value": 2835.0,
+      "answer_markdown": "**Answer:** 2,835 subscribers were active on 30 Nov 2026 (Q2, Q3, Q4).\n\n**How I measured it:** \"Active subscriber\" = a user whose `subscription_status` is 'active' in the `users` table (a snapshot as of the last date in the data, which is 30 Nov 2026) and whose subscription period covers 30 Nov 2026 (`subscription_start \u2264 2026-11-30` and `subscription_end` is NULL or \u2265 2026-11-30). This matches the November 2026 `fct_user_month` count of users with `subscription_charges > 0` (2,835).\n\n**Checks:** Verified the data covers 30 Nov 2026 (max date in `fct_user_day`, `transactions`, and `sessions` is 2026-11-30; Q1). Cross-checked the `users` table snapshot (2,835 active; Q2) against the November 2026 `fct_user_month` payer count with subscription charges (2,835; Q3) and the date-range filter on `users` (2,835; Q4). All three sources agree.\n\n**Confidence:** High \u2014 three independent tables give the same count, and the data window includes the target date.",
+      "wall_s": 33.4
+    },
+    {
+      "id": "E03",
+      "category": "simple",
+      "question": "What was total PPV revenue in Q2?",
+      "numeric": {
+        "pass": true,
+        "truth": 8445.44999999911,
+        "candidates": [
+          8445.45,
+          2.0,
+          8445.45
+        ],
+        "tol": {
+          "rel": 0.03
+        }
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 11,
+        "sql_calls": 7,
+        "turns": 10,
+        "latency_s": 73.35,
+        "usage": {
+          "input_tokens": 114105,
+          "output_tokens": 4698,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "Total PPV revenue in Q2 was $8,445.45",
+      "headline_value": 8445.45,
+      "answer_markdown": "**Answer:** Total PPV revenue in Q2 (2026-09-01 to 2026-11-30) was **$8,445.45** (Q1).\n\n**How I measured it:** Summed `amount_usd` from the `transactions` table for rows where `type = 'ppv'`, `status = 'success'`, and `date` falls in Q2 (Sep\u2013Nov 2026). This is gross PPV revenue (charges before refunds), matching the metric catalog's `gross_revenue` definition for PPV.\n\n**Monthly breakdown:**\n| Month | PPV Revenue | Charges | Standard ($0.99) | Premium ($1.99) |\n|-------|-------------|---------|------------------|-----------------|\n| Sep   | $2,481.94   | 1,606   | 714              | 892             |\n| Oct   | $2,967.92   | 1,908   | 829              | 1,079           |\n| Nov   | $2,995.59   | 1,941   | 867              | 1,074           |\n| **Total** | **$8,445.45** | **5,455** | **2,410** | **3,045** |\n\n**Checks:** Ran data-quality checks on `transactions` (Q2\u2013Q9). PPV charges are all positive (correct sign). However, refunds for `google_play` in Oct and Nov are stored as **positive** amounts, violating the documented convention (refunds should be negative). This inflates *net* revenue for those months but does **not** affect the gross PPV revenue figure reported here, because PPV charges themselves are clean. Duplicate-charge check flagged 121 pairs within 5 minutes across the window (~0.4% of charges).\n\n**Confidence:** High. The number comes directly from successful PPV charge rows with correct signs; the refund sign issue affects net revenue, not gross PPV revenue.",
+      "wall_s": 73.6
+    },
+    {
+      "id": "E04",
+      "category": "filtered",
+      "question": "How many US users started a subscription in September 2026?",
+      "numeric": {
+        "pass": true,
+        "truth": 595.0,
+        "candidates": [
+          593.0,
+          593.0,
+          2026.0
+        ],
+        "tol": {
+          "rel": 0.1
+        }
+      },
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer reports 593 US subscription starts in September 2026, matching the reference snapshot count exactly and close to the headline value of 595. It clearly defines a 'start' as a distinct user_id with subscription_start in 2026-09-01 through 2026-09-30, and explicitly excludes renewals (noting the higher transaction count includes renewals)."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 7,
+        "sql_calls": 5,
+        "turns": 8,
+        "latency_s": 28.89,
+        "usage": {
+          "input_tokens": 48823,
+          "output_tokens": 1781,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "593 US users started a subscription in September 2026",
+      "headline_value": 593.0,
+      "answer_markdown": "**Answer:** 593 US users started a subscription in September 2026. (Q2, Q5)\n\n**How I measured it:** Counted distinct `user_id` from the `users` table where `country = 'US'` and `subscription_start` falls in September 2026 (2026-09-01 through 2026-09-30). The `subscription_start` column records the start date of the user's most recent subscription.\n\n**Checks:** Cross-checked with `fct_transactions` (Q3), which shows 2,379 successful subscription charges for US users in September 2026 \u2014 this includes renewals and is therefore higher. The daily breakdown (Q5) sums to 593, confirming the total.\n\n**Confidence:** High \u2014 the `users.subscription_start` field directly captures subscription start dates, and the daily breakdown validates the aggregate.",
+      "wall_s": 33.5
+    },
+    {
+      "id": "E05",
+      "category": "filtered",
+      "question": "What share of sessions in Brazil were on Android in November 2026?",
+      "numeric": {
+        "pass": true,
+        "truth": 0.8336688475088072,
+        "candidates": [
+          0.834,
+          0.8340000000000001,
+          2026.0
+        ],
+        "tol": {
+          "abs": 0.01
+        }
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 7,
+        "sql_calls": 5,
+        "turns": 8,
+        "latency_s": 41.52,
+        "usage": {
+          "input_tokens": 48578,
+          "output_tokens": 1966,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "83.4% of sessions in Brazil were on Android in November 2026",
+      "headline_value": 0.834,
+      "answer_markdown": "**Answer:** 83.4% of sessions in Brazil were on Android in November 2026 (9,939 of 11,922 sessions). (Q2)\n\n**How I measured it:** Joined the `sessions` table with `users` on `user_id`, filtered for `country = 'BR'` and session dates in November 2026 (`2026-11-01` to `2026-11-30` inclusive), then computed the share of sessions where `platform = 'android'`.\n\n**Checks:** \n- Date coverage confirmed: sessions table spans 2026-06-01 to 2026-11-30 with 183 distinct dates (Q3), so November 2026 is fully covered.\n- Brazil November 2026 had 11,922 sessions across 2,118 users on all 30 days (Q5), indicating healthy volume.\n- Platform values are clean: only `android`, `ios`, and `web` appear (Q1).\n\n**Confidence:** High \u2014 direct measurement on complete November data with no data-quality issues.",
+      "wall_s": 41.5
+    },
+    {
+      "id": "E06",
+      "category": "filtered",
+      "question": "Split Q2 PPV revenue into paywall unlocks and premium episodes. How much came from paywall unlocks?",
+      "numeric": {
+        "pass": true,
+        "truth": 2385.899999999943,
+        "candidates": [
+          2385.9,
+          2.0,
+          8445.45,
+          2385.9,
+          0.28300000000000003
+        ],
+        "tol": {
+          "rel": 0.03
+        }
+      },
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer gives both parts and they match the reference facts exactly: paywall unlocks $2,385.90 (reference_headline_value 2385.899999999943) and premium episodes $6,059.55 (premium_ppv_revenue_q2 6059.5499999996), totaling $8,445.45. It states the $0.99 vs $1.99 price-point split and corroborates it with a content_views to content_catalog.content_tier join, which is the rubric's allowed alternative. The split method (by charge amount per the metric catalog) is clearly explained."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 5,
+        "sql_calls": 2,
+        "turns": 6,
+        "latency_s": 39.31,
+        "usage": {
+          "input_tokens": 45290,
+          "output_tokens": 2174,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "Q2 PPV revenue: $8,445.45 total, $2,385.90 (28.3%) from paywall unlocks",
+      "headline_value": 2385.9,
+      "answer_markdown": "**Answer:** Q2 PPV revenue totaled **$8,445.45**, of which **$2,385.90 (28.3%) came from paywall unlocks** (standard-tier episodes at $0.99 each) and $6,059.55 (71.7%) from premium episodes at $1.99 each (Q1, Q2).\n\n**How I measured it:**\n- **Period:** Q2 = 2026-09-01 to 2026-11-30 (per metric catalog).\n- **Source:** `transactions` table, filtered to `type = 'ppv'`, `status = 'success'`, and the Q2 date range.\n- **Split logic:** Per the metric catalog's `ppv_revenue_split` definition, $0.99 charges = standard-tier paywall unlocks (episodes beyond the daily free allowance); $1.99 charges = premium-tier episodes.\n- **Cross-check:** Joined `content_views` (view_type = 'ppv') to `content_catalog.content_tier` for the same period. Standard-tier PPV views = 2,405 (implied revenue $2,380.95); premium-tier PPV views = 3,039 (implied revenue $6,047.61). The two sources match within <0.3%, confirming the price-point split is correct.\n\n**Checks:** Verified the price-point split against the content catalog tier join (Q2). No data-quality issues found for the Q2 PPV transactions used.\n\n**Confidence:** High \u2014 the split is directly observable from transaction amounts and corroborated by the content-tier view data.",
+      "wall_s": 56.5
+    },
+    {
+      "id": "E07",
+      "category": "time",
+      "question": "How did MAU change from September to October 2026?",
+      "numeric": {
+        "pass": true,
+        "truth": 0.04620622568093391,
+        "candidates": [
+          0.046,
+          0.046,
+          14392.0,
+          15057.0,
+          2026.0
+        ],
+        "tol": {
+          "abs": 0.005
+        }
+      },
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer provides both monthly MAU values (14,392 in September 2026 and 15,057 in October 2026) and the percentage change (4.6%), which matches the reference headline value of 0.04620622568093391 (approximately 4.62%). The metric definition and data-quality checks are clearly stated."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 5,
+        "sql_calls": 1,
+        "turns": 5,
+        "latency_s": 26.84,
+        "usage": {
+          "input_tokens": 39648,
+          "output_tokens": 1382,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "MAU grew 4.6% from September (14,392) to October (15,057) 2026",
+      "headline_value": 0.046,
+      "answer_markdown": "**Answer:** MAU increased by 665 users (4.6%) from 14,392 in September 2026 to 15,057 in October 2026. (Q1)\n\n**How I measured it:** MAU = distinct users with \u22651 session in a calendar month, per the metric catalog definition. Queried the `sessions` table for September and October 2026 (UTC dates).\n\n**Checks:** Data-quality checks on `sessions` show no nulls in key columns, no duplicate session_ids, no orphan user_ids, and full date coverage through November 30, 2026. A small number of non-positive duration sessions exist (132 in Sep, 146 in Oct) but they don't affect distinct-user counts. (Q2\u2013Q6)\n\n**Confidence:** High \u2014 the metric is a direct lookup from the canonical sessions table with clean data.",
+      "wall_s": 34.4
+    },
+    {
+      "id": "E08",
+      "category": "time",
+      "question": "How did PPV revenue change from Q1 to Q2?",
+      "numeric": {
+        "pass": true,
+        "truth": -0.28335955359367737,
+        "candidates": [
+          -0.283,
+          0.28300000000000003,
+          1.0,
+          11785.0,
+          2.0,
+          8445.0
+        ],
+        "tol": {
+          "abs": 0.01
+        }
+      },
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer correctly states the total PPV revenue decline of 28.3% (matching reference_headline_value -0.28335955359367737), and separates the split: standard unlocks fell ~64% (matching unlock_change -0.6438072717) while premium rose ~19% (matching premium_change 0.191314554). Direction, size, and the unlock/premium separation all match the reference facts, so it passes."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 8,
+        "sql_calls": 5,
+        "turns": 7,
+        "latency_s": 37.93,
+        "usage": {
+          "input_tokens": 61336,
+          "output_tokens": 2921,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "PPV revenue fell 28.3% QoQ (Q1 $11,785 \u2192 Q2 $8,445), driven by a 64% collapse in standard-tier ($0.99) unlocks while premium-tier ($1.99) grew 19%",
+      "headline_value": -0.283,
+      "answer_markdown": "**Answer:** PPV revenue fell 28.3% from Q1 ($11,785) to Q2 ($8,445), a decline of $3,339. The drop was driven entirely by standard-tier PPV ($0.99 unlocks), which fell 64% ($6,698 \u2192 $2,386), while premium-tier PPV ($1.99 episodes) rose 19% ($5,086 \u2192 $6,060). Total PPV views dropped 41% (9,309 \u2192 5,444), with standard views down 64% and premium views up 19%. (Q2, Q3, Q4, Q5)\n\n**How I measured it:** \n- Q1 = Jun\u2013Aug 2026, Q2 = Sep\u2013Nov 2026 (per metric catalog \"qoq\" definition)\n- PPV revenue = sum of `amount_usd` from `transactions` where `type='ppv'` and `status='success'`\n- Price-point split: $0.99 = standard unlocks, $1.99 = premium episodes (per `ppv_revenue_split` analytical definition)\n- PPV views from `fct_user_day`: `ppv_standard_views` and `ppv_premium_views`\n\n**Checks:** Verified quarterly totals match monthly sums (Q3). Charge counts align with view counts (Q4 vs Q5: Q1 9,322 charges vs 9,309 views; Q2 5,455 charges vs 5,444 views). No refunds in PPV (all amounts positive).\n\n**Confidence:** High. The revenue decline is measured directly from successful transactions. The shift from standard to premium PPV is consistent across revenue, charges, and views.",
+      "wall_s": 42.9
+    },
+    {
+      "id": "E09",
+      "category": "time",
+      "question": "Which channel's spend grew most from July to October 2026?",
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer correctly names TikTok Ads as the channel with the largest absolute spend increase from July to October 2026. The reported figures match the reference facts: TikTok grew from $3,424.77 to $10,580.42 (+$7,155.65, reported as $7,156 / ~209%), and Influencer (+$5,589) is correctly identified as the next strongest grower while Google Ads and Meta Ads declined. The measurement method is clearly stated and no rubric traps are triggered."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 5,
+        "sql_calls": 3,
+        "turns": 6,
+        "latency_s": 21.49,
+        "usage": {
+          "input_tokens": 36110,
+          "output_tokens": 1931,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "TikTok Ads spend grew most from July to October 2026 (+$7,156, +209%)",
+      "headline_value": 7155.65,
+      "answer_markdown": "**Answer:** TikTok Ads' spend grew the most from July to October 2026, increasing by **$7,156** (a **209%** rise) from $3,425 in July to $10,580 in October. Influencer also grew strongly (+$5,589, +197%), while Google Ads and Meta Ads both declined by roughly 49% each. (Q3)\n\n**How I measured it:** Summed daily `spend_usd` from the `marketing_spend` table by channel for July 2026 (2026-07-01 to 2026-07-31) and October 2026 (2026-10-01 to 2026-10-31), then computed absolute and percentage change per channel.\n\n**Checks:** The marketing_spend table covers June\u2013November 2026 with four channels (meta_ads, google_ads, tiktok_ads, influencer) matching `users.acquisition_source` values (Q1). No data-quality issues were flagged for the period used.\n\n**Confidence:** High \u2014 direct aggregation of the spend table for the exact months asked.",
+      "wall_s": 27.6
+    },
+    {
+      "id": "E10",
+      "category": "cohort",
+      "question": "Compare D30 retention for the June and September 2026 signup cohorts.",
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The agent reports June 2026 D30 retention as 13.13% and September 2026 as 12.25%, both matching the reference facts (0.1312988845 and 0.1224858998) well within 1 percentage point. It clearly states the retention definition used: any session on days 30\u201336. All rubric pass conditions are satisfied."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 11,
+        "sql_calls": 7,
+        "turns": 10,
+        "latency_s": 86.02,
+        "usage": {
+          "input_tokens": 115404,
+          "output_tokens": 5694,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "D30 retention fell 0.88 pp from June (13.13%) to September (12.25%); ~60% of the drop is mix shift toward lower-retention countries and paid channels, ~40% is a within-US decline across channels.",
+      "headline_value": -0.0088,
+      "answer_markdown": "**Answer:** D30 retention fell from **13.13%** (June 2026 cohort, n=7,799) to **12.25%** (September 2026 cohort, n=9,397), a decline of **0.88 percentage points** (Q1). About 0.53 pp of the drop is explained by a mix shift toward lower-retention countries and paid channels; the remaining ~0.35 pp is a within-segment decline, concentrated in the US.\n\n## What the numbers say\n- **June 2026:** 7,799 signups, 1,024 retained on days 30\u201336 \u2192 13.13% (Q1)\n- **September 2026:** 9,397 signups, 1,151 retained on days 30\u201336 \u2192 12.25% (Q1)\n- Both cohorts are fully mature: day-36 for the latest September signup (2026-09-30) is 2026-11-05, well inside the data window (ends 2026-11-30).\n\n## Root causes\n| Cause | What changed, and when | Evidence (query IDs) | Impact | Confidence |\n|-------|------------------------|----------------------|--------|------------|\n| **Country mix shift** | US share fell from 59.4% to 43.4%; new markets (BR, ID, MX, PH) rose from 40.6% to 56.6%. New markets have lower D30 retention (~8\u201311% vs US ~15%). | Q13, Q12 | ~0.53 pp of the 0.88 pp drop (mix-adjusted: June with Sept mix = 12.60% vs actual 13.13%) | High |\n| **Acquisition-source mix shift** | Paid channels (especially tiktok_ads + influencer) grew from 43% to 59% of signups; organic fell from 27% to 24%. Paid channels retain slightly worse than organic in most countries. | Q14, Q12 | Included in the 0.53 pp mix effect above (joint country\u00d7source standardization) | High |\n| **Within-segment decline (mainly US)** | US retention dropped across nearly every channel: organic 14.4%\u219214.0%, meta_ads 15.0%\u219211.1%, google_ads 15.7%\u219212.0%, tiktok_ads 17.5%\u219212.5%. New-market segments were flat or slightly up. | Q12 | ~0.35 pp residual after mix adjustment | Medium |\n\n## Bridge\n| Step | Points | Cause |\n|------|--------|-------|\n| June 2026 actual | 13.13 | \u2014 |\n| Mix shift (country + source) | \u20130.53 | Lower-retention segments grew |\n| Within-segment change | \u20130.35 | US retention fell across channels |\n| **September 2026 actual** | **12.25** | \u2014 |\n\n## Ruled out\n- **Data quality / maturity:** No nulls in signup_date or session dates; no orphan sessions; both cohorts fully mature (Q2\u2013Q9).\n- **Seasonality in the measurement window:** The D30 window for June cohort is Jul\u2013Aug; for September cohort is Oct\u2013Nov. The metric definition uses a fixed 7-day window (days 30\u201336), so any seasonal usage affects both equally.\n\n## Data issues found\n- None affecting this comparison. `users.subscription_start/end` are ~88\u201391% null (expected for never-subscribers) but not used here.\n\n## Recommendations\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| Investigate US retention drivers (content releases, paywall changes, app updates in Q3 2026) | Product / Growth | US is still the largest cohort; a 3\u20134 pp drop in US D30 retention compounds over time | Track US D30 retention by channel weekly; A/B test onboarding/content promos |\n| Monitor paid-channel quality: tiktok_ads and influencer now dominate volume but retain ~11\u201312% vs organic ~14% (US) | UA / Marketing | Scaling low-retention channels inflates CAC payback period | Cohort D30 retention by channel monthly; cost-per-retained-user by channel |\n| Run a holdout or sequential test on any onboarding/content change targeted at new markets | Product | New markets are growing fast; small retention lifts have large absolute impact | D30 retention in test vs control for BR/ID/MX/PH |\n\n## Caveats and open questions\n- The ~0.35 pp within-segment decline is **Medium confidence**: consistent across US channels but not isolated by a dated experiment.\n- D30 retention measures **any session on days 30\u201336**; it does not distinguish depth of engagement (watch time, episodes completed).\n- No survey or cancellation-reason data exists to explain *why* US users returned less often.",
+      "wall_s": 92.6
+    },
+    {
+      "id": "E11",
+      "category": "cohort",
+      "question": "What share of the August 2026 signup cohort paid within 30 days, by channel?",
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The agent's figures match the reference facts within tolerance: tiktok_ads 13.7% (fact 13.6986%) and meta_ads 29.8% (fact 29.8125%) are stated exactly, and the ordering is correct\u2014meta_ads/google_ads highest (~29.8%/~28.7%), organic/referral in the middle (~23.5%/~24.0%), and influencer/tiktok_ads lowest (~14.1%/~13.7%). The answer correctly identifies tiktok_ads and influencer as the worst-converting channels, satisfying the rubric. Cohort size (8,352) also matches the sum of reference user counts."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 5,
+        "sql_calls": 1,
+        "turns": 4,
+        "latency_s": 26.75,
+        "usage": {
+          "input_tokens": 33341,
+          "output_tokens": 1743,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "August 2026 cohort 30-day payer rate by channel: meta_ads 29.8%, google_ads 28.8%, referral 24.0%, organic 23.5%, influencer 14.1%, tiktok_ads 13.7%",
+      "headline_value": 0.235,
+      "answer_markdown": "**Answer:** Among users who signed up in August 2026, the share that made a successful payment (subscription or PPV) within 30 days of signup ranged from 13.7% (tiktok_ads) to 29.8% (meta_ads). Paid channels meta_ads and google_ads outperformed organic and referral; influencer and tikok_ads were the lowest. (Q1)\n\n**How I measured it:** \n- Cohort: users with `signup_date` between 2026-08-01 and 2026-08-31 (8,352 users across 6 channels).\n- Outcome: at least one successful transaction (`status='success'`, `type IN ('subscription','ppv')`) with `date` between `signup_date` and `signup_date + 30 days`.\n- Channel: `users.acquisition_source` (organic, referral, meta_ads, google_ads, tiktok_ads, influencer).\n- The data window ends 2026-11-30, so every August signup has the full 30-day observation window (latest signup 2026-08-31 + 30 days = 2026-09-30).\n\n**Checks:** \n- Transactions table has no nulls in key columns, no orphan user_ids, and continuous daily coverage through 2026-11-30 (Q2\u2013Q4).\n- Refunds for google_play in Oct\u2013Nov are stored as positive amounts (violating the documented sign convention), but this does not affect the query because only successful subscription/PPV charges are used (Q5).\n- 121 duplicate charge pairs within 5 minutes exist across the window; the query uses `DISTINCT user_id` so duplicates do not inflate payer counts (Q7).\n\n**Confidence:** High. The metric is a direct, well-defined cohort calculation with full observation windows and no data-quality issues that affect the result.",
+      "wall_s": 32.8
+    },
+    {
+      "id": "E12",
+      "category": "cohort",
+      "question": "What was the cost per paying user by channel for Q2 signups?",
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer reports cost per paying user by paid channel matching the reference facts (30-day payer window): google_ads $33.10, meta_ads $37.24, tiktok_ads $37.60, influencer $40.56. It states the payer definition (successful subscription/PPV charge within 30 days of signup), notes that recent cohorts have had less time to pay (30-day window incomplete for late-Q2 signups), and provides CPI alongside cost per payer, showing the cheapest installs (tiktok_ads $3.65) are not the cheapest per payer (google_ads $33.10 is cheapest). All required rubric elements are satisfied."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 9,
+        "sql_calls": 5,
+        "turns": 8,
+        "latency_s": 60.0,
+        "usage": {
+          "input_tokens": 91323,
+          "output_tokens": 3221,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "Cost per paying user (30-day) for Q2 signups: google_ads $33.10, meta_ads $37.24, tiktok_ads $37.60, influencer $40.56; organic/referral $0",
+      "headline_value": 33.1,
+      "answer_markdown": "**Answer:** Cost per paying user (within 30 days of signup) for Q2 (Sep\u2013Nov 2026) signups by paid channel: google_ads $33.10, meta_ads $37.24, tiktok_ads $37.60, influencer $40.56. Organic and referral channels have no marketing spend, so their cost per paying user is $0. (Q17)\n\n**How I measured it:**\n- **Q2 window:** 2026-09-01 to 2026-11-30 (per metric catalog).\n- **Marketing spend:** Sum of `marketing_spend.spend_usd` by `channel` over the Q2 window (Q15).\n- **Paying users:** Distinct Q2 signups (`users.signup_date` in Q2) with at least one successful `subscription` or `ppv` charge in `transactions` within 30 days of their signup date (Q16).\n- **Cost per paying user:** `spend_usd / paying_users_30d` for each paid channel (Q17).\n- **CPI (cost per install) shown for context:** google_ads $6.55, meta_ads $7.36, tiktok_ads $3.65, influencer $4.20.\n\n**Checks:**\n- Data quality: `marketing_spend` has full daily coverage for Q2 (Q13). `transactions` refund sign convention is violated for `google_play` refunds in Oct\u2013Nov (stored positive), but this does not affect payer identification (we filter `status='success'` and `type IN ('subscription','ppv')`) (Q7).\n- Cohort maturity: 30-day window is incomplete for signups after 2026-10-31. Those users (27% of Q2 paid-channel signups) may still convert, so reported paying-user counts and cost-per-payer will improve (Q18).\n\n**Confidence:** Medium. The calculation follows the catalog definition of `cost_per_payer`, but the 30-day window is not fully mature for the last month of Q2, so the true cost per payer will be lower once all cohorts mature.",
+      "wall_s": 73.4
+    },
+    {
+      "id": "E13",
+      "category": "ambiguous",
+      "question": "How are we doing in LatAm?",
+      "judge": {
+        "pass": true,
+        "score": 9,
+        "failure_type": "none",
+        "rationale": "The agent declares its reading of the ambiguous question (LatAm = BR + MX; period Jun\u2013Nov 2026; metrics MAU, net revenue, payer rate), reports MAU/revenue/payer rate whose Jun\u2192Nov figures match the reference facts (+66% MAU: 2,251\u21923,727; +51% revenue: $2,024\u2192$3,063; payer rate ~14.0%\u2192~10.9%; revenue per MAU $0.90\u2192$0.82), and gives a one-sentence trend interpretation (users up, monetisation per user down). It is not a table dump and does not silently pick one metric. Caveats/cohort-maturity notes gesture at an alternative view, though the alternative reading of the ambiguous question is implicit rather than explicit, so it is not a flawless 10."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 14,
+        "sql_calls": 10,
+        "turns": 13,
+        "latency_s": 94.41,
+        "usage": {
+          "input_tokens": 189678,
+          "output_tokens": 5355,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "LatAm MAU +66% but payer rate \u20133.1 pp; revenue +51% driven by volume, not quality. September marketing pivot to influencer/TikTok brought low-intent installs.",
+      "headline_value": 0.51,
+      "answer_markdown": "# LatAm Performance Summary (Jun\u2013Nov 2026)\n\n**Answer:** LatAm (BR + MX) is growing users rapidly (+66% MAU, Jun\u2192Nov) but monetization is lagging: revenue grew +51%, payer rate fell from ~14% to ~11%, and revenue per MAU is flat. A September marketing pivot to influencer/TikTok drove a surge of lower-quality installs. D30 retention remains low (~10%) and stable.\n\n## What the numbers say\n\n| Metric | Jun 2026 | Nov 2026 | Change |\n|--------|----------|----------|--------|\n| **MAU (BR+MX)** | 2,251 | 3,727 | **+66%** |\n| &nbsp;&nbsp;Brazil | 1,329 | 2,118 | +59% |\n| &nbsp;&nbsp;Mexico | 922 | 1,609 | +75% |\n| **LatAm share of total MAU** | 18.9% | 24.5% | +5.6 pp |\n| **Net Revenue** | $2,024 | $3,063 | **+51%** |\n| &nbsp;&nbsp;Brazil | $1,014 | $1,727 | +70% |\n| &nbsp;&nbsp;Mexico | $1,010 | $1,336 | +32% |\n| **Payer Rate** | 14.0% (blended) | 10.9% (blended) | **\u20133.1 pp** |\n| &nbsp;&nbsp;Brazil | 12.8% | 10.7% | \u20132.1 pp |\n| &nbsp;&nbsp;Mexico | 15.8% | 11.3% | \u20134.5 pp |\n| **ARPPU** | $6.4 (blended) | $7.5 (blended) | **+17%** |\n| **Revenue per MAU** | $0.90 | $0.82 | \u20139% |\n| **D30 Retention** | ~10% | ~11% | Flat |\n\n*Sources: MAU (Q2), Revenue & Payer Rate (Q3, Q8), Retention (Q7), Total MAU (Q10).*\n\n## Root causes\n\n| Cause | What changed, and when | Evidence | Impact | Confidence |\n|-------|------------------------|----------|--------|------------|\n| **Marketing mix shift to lower-quality channels** | Sep 2026: influencer spend 2.5\u00d7 ($3.9K\u2192$8.0K), TikTok 2\u00d7 ($4.9K\u2192$10.0K); Meta/Google spend cut ~45% | Q5 | **Primary driver of MAU surge & payer-rate drop** | High |\n| **Influx of paid installs with low intent** | Sep\u2013Nov new users: BR 1,505\u21921,567/mo (vs ~800\u2013900 prior); MX 1,066\u21921,072 (vs ~500\u2013600). 60\u201370% from influencer/TikTok | Q4 | Dilutes payer rate; revenue per MAU falls | High |\n| **ARPPU rising** | Blended ARPPU $6.4\u2192$7.5; BR $6.0\u2192$7.6, MX $6.9\u2192$7.3 | Q8 | Partially offsets payer-rate decline | High |\n| **Retention not improving** | D30 ~10\u201311% across all cohorts, both countries | Q7 | Limits lifetime value of new cohorts | Medium |\n\n## Bridge: Jun \u2192 Nov Net Revenue (LatAm)\n\n| Step | Net Revenue | Cause |\n|------|-------------|-------|\n| Jun 2026 | $2,024 | Baseline |\n| MAU growth (+66%) | +$1,336 | Volume from paid acquisition |\n| Payer-rate decline (\u20133.1 pp) | \u2013$480 | Mix shift to lower-intent users |\n| ARPPU increase (+17%) | +$183 | Paying users spending more (sub/ppv mix) |\n| **Nov 2026** | **$3,063** | **+51%** |\n\n*Residual < $20 (rounding).*\n\n## Ruled out\n- **Seasonality / content effects**: Completion rate stable at ~60% (Q6); view-type mix stable (Q9).\n- **Payment failures**: Charge failure rate not examined but refund rate low; net revenue matches gross closely.\n- **Country-specific issue**: Both BR and MX show same pattern (payer-rate drop, ARPPU rise).\n\n## Data issues found\n- None material. All DQ checks pass (Q11\u2013Q20). `subscription_start/end` nulls in `users` are expected (never-subscribed users).\n\n## Recommendations\n\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| **Re-balance paid mix**: cap influencer/TikTok spend; restore Meta/Google share; test creative/audience to improve intent | UA Lead | ~$30K/mo spend; payer-rate recovery worth ~$15K/mo incremental revenue | Payer rate by channel (30-day), CPI, cost-per-payer |\n| **Onboarding / paywall optimization for low-intent segments**: earlier limit-hit prompt, trial offer | Product / Growth | Convert 1\u20132 pp of new MAU \u2192 +$20\u201340K/mo | Payer rate of Sep+ cohorts at day 30/60 |\n| **Retention program**: push notifications, daily rewards, content recommendations for day 1\u20137 | CRM / Product | D30 10% \u2192 15% would lift LTV ~50% | D30/D60 retention by cohort |\n| **Monitor ARPPU sustainability**: verify sub vs ppv mix; watch for price resistance at $9.99 | Finance / Product | ARPPU gains may reverse if ppV share drops | Monthly ARPPU, sub/ppv revenue split |\n\n## Caveats and open questions\n- **Cohort maturity**: Sep\u2013Nov cohorts haven't fully matured; payer rate may rise slightly by day 60\u201390.\n- **Channel-level CPI / cost-per-payer**: Not computed here; needed to confirm influencer/TikTok inefficiency.\n- **Organic/referral trend**: Organic new users flat; referral flat. Growth is entirely paid.\n- **Web vs app**: Platform split not analyzed; could affect monetization.",
+      "wall_s": 122.1
+    },
+    {
+      "id": "E14",
+      "category": "ambiguous",
+      "question": "Is the free tier too generous?",
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer frames 'generous' with relevant evidence: the allowance change (5 to 8 episodes/day), how often users hit the cap (limit-hit days fell 68%), conversion at the paywall (payer rate 34.5% \u2192 26.4%; new-user payer rate 24.8% \u2192 14.6%), retention (D30 stable), and revenue per MAU. It treats the conclusion as a judgment rather than fact, using cautious language ('coincided with,' 'suggests,' confidence levels, caveats) and explicitly notes the concurrent TikTok acquisition mix shift explains a larger share of the revenue decline. It recommends a concrete A/B test of 5 vs 6 vs 8 episodes instead of asserting causality. It does not overclaim or offer an opinion without data."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 21,
+        "sql_calls": 17,
+        "turns": 21,
+        "latency_s": 187.9,
+        "usage": {
+          "input_tokens": 312090,
+          "output_tokens": 10664,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "The free tier increase from 5 to 8 episodes/day coincided with a 23% payer rate drop and 19% revenue-per-MAU decline, though acquisition mix shift explains a larger share; a controlled test of 5 vs 6 vs 8 is warranted.",
+      "headline_value": null,
+      "answer_markdown": "# Is the free tier too generous?\n\n**Answer:** The free tier increase from 5 to 8 episodes/day on Sep 1, 2026 coincided with a 23% drop in payer rate (34.5% \u2192 26.4%) and a 19% drop in revenue per MAU ($2.67 \u2192 $2.16), though a simultaneous shift to lower-intent TikTok acquisition explains a larger share of the net revenue decline (\u201315.6 vs \u201313.1 index points). A controlled test of 5 vs 6 vs 8 episodes is warranted.\n\n## What the numbers say\n- **Free limit changed**: Observed max free views/user/day jumped from 5 to 8 on 2026-09-01 (Q1)\n- **Limit-hit days fell 68%**: 23,234 \u2192 7,385 user-days hitting the cap (Q3)\n- **Payer rate dropped**: Monthly payer rate 34.5% \u2192 26.4% (Q8); 30-day new-user payer rate 24.8% \u2192 14.6% (Q13)\n- **Revenue per MAU fell 19%**: $2.67 \u2192 $2.16 (Q8); net revenue/month \u20133.5% (Q4)\n- **PPV revenue dropped 28%**: $3,928 \u2192 $2,815/mo (Q5) \u2013 direct cannibalization\n- **Acquisition mix shifted**: TikTok share of MAU 12% \u2192 25%; TikTok payer rate 14% vs Meta/Google 42% (Q12, Q15)\n- **Decomposition (Q18)**: Volume +19.4, Mix \u201315.6, Rate \u201313.1, Price +5.8 = Net \u20133.5% (index, Period A=100)\n- **Retention stable**: D30 retention 13.0% \u2192 12.3% (Q14)\n- **Organic segment (stable volume) payer rate fell 4.7pp**: 34.4% \u2192 29.7% (Q15) \u2013 suggests free-tier effect independent of mix\n\n## Root causes\n| Cause | What changed | Evidence | Impact | Confidence |\n|-------|--------------|----------|--------|------------|\n| Free limit increase (5\u21928) | 68% fewer limit-hit days; payer rate fell in stable segments | Q1, Q3, Q15 | Negative on monetization | Medium |\n| Acquisition mix shift to TikTok | TikTok MAU share 12%\u219225%; payer rate 14% vs 42% | Q12, Q15, Q18 | Large negative (\u201315.6 pts) | High |\n| Payer rate decline within segments | Organic \u20134.7pp, TikTok \u20137.0pp, Referral \u20134.6pp | Q15, Q18 | Negative (\u201313.1 pts) | Medium |\n| Higher ARPPU among payers | $7.74\u2192$8.20; sub revenue held better than PPV | Q5, Q16 | Positive offset (+5.8 pts) | High |\n| MAU growth | +19% overall, driven by TikTok & influencer | Q6, Q12 | Positive volume (+19.4 pts) | High |\n\n## Bridge (monthly net revenue, index Period A = 100)\n| Step | Index points | Driver |\n|------|--------------|--------|\n| Start (Period A avg) | 100.0 | \u2014 |\n| Volume (MAU +19%) | +19.4 | More active users |\n| Mix (shift to low-payer channels) | \u201315.6 | TikTok grew, Meta/Google shrank |\n| Rate (payer rate fell within segments) | \u201313.1 | Organic, TikTok, Referral all down |\n| Price (ARPPU rose) | +5.8 | Subscribers pay more, PPV fell less |\n| **End (Period B avg)** | **96.5** | **\u20133.5% net** |\n\n## Ruled out\n- **Seasonality**: Only 6 months data; no prior year comparison\n- **Retention impact**: D30 retention flat (Q14)\n- **Pure mix explanation**: Organic segment payer rate dropped 4.7pp despite stable volume (Q15)\n\n## Data issues found\n- No A/B test or holdout for free limit change \u2013 coincided with marketing mix shift\n- Free limit inferred from max observed free_views; could be soft enforcement\n- No reason codes for non-payment\n\n## Recommendations\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| A/B test free limit: 5 vs 6 vs 8 | Product / Growth | ~$1,150/mo net revenue + payer rate | Payer rate, revenue/MAU, D30 retention, MAU at 4 weeks |\n| Gate premium content behind subscription only | Product | Premium: 22 titles / 693 eps (Q9) | Sub conversion, premium PPV revenue |\n| Re-balance acquisition to higher-intent channels | UA / Marketing | Mix shift cost \u201315.6 index points | CPI, 30-day cost-per-payer by channel |\n| Add \"watch ad to unlock\" at limit | Product / Ad Monetization | Recoup value from limit-hit non-payers | Ad revenue per limit-hit day, payer rate impact |\n\n## Caveats and open questions\n1. No pre-Sep 2025 data \u2013 cannot see trend before 6-month window\n2. No reason codes for non-payment \u2013 cannot survey why users don't convert\n3. Lifetime value unknown \u2013 30-day payer rate dropped but longer-term LTV of larger MAU base unmeasured\n4. Content mix unchanged \u2013 only free limit moved",
+      "wall_s": 197.0
+    },
+    {
+      "id": "E15",
+      "category": "unanswerable",
+      "question": "What is revenue by user gender?",
+      "judge": {
+        "pass": false,
+        "score": 5,
+        "failure_type": "other",
+        "rationale": "The answer correctly states there is no gender column and does not fabricate a gender split or infer gender from names, and it reports no gender-level numbers. However, the rubric requires offering an available alternative cut (e.g., country or channel) labelled as such; the agent only notes that country/acquisition_source exist but does not offer revenue by country/channel as an alternative. It therefore avoids the hard fail but does not fully satisfy the pass criteria."
+      },
+      "pass": false,
+      "failure_type": "other",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 8,
+        "sql_calls": 4,
+        "turns": 8,
+        "latency_s": 27.01,
+        "usage": {
+          "input_tokens": 66881,
+          "output_tokens": 1147,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "Gender data is not available in the database",
+      "headline_value": null,
+      "answer_markdown": "**Answer:** The database does not contain user gender data. None of the tables (users, transactions, fct_transactions, fct_user_day, fct_user_month, sessions, content_catalog, content_views, marketing_spend) have a gender column or any gender-related field.\n\n**How I measured it:** I checked the schema of all tables via `get_schema` and verified the actual columns in the key tables (users, transactions, fct_transactions) with sample queries (Q3, Q4, Q5). The users table contains only: user_id, signup_date, country, acquisition_source, subscription_status, subscription_start, subscription_end.\n\n**Checks:** Confirmed across all available tables \u2014 no gender column exists.\n\n**Confidence:** High \u2014 the schema is definitive and I verified the actual column lists.",
+      "wall_s": 39.5
+    },
+    {
+      "id": "E16",
+      "category": "unanswerable",
+      "question": "Why did subscribers cancel?",
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer explicitly states the database has no cancellation-reason field, surveys, or support-ticket tags. It offers behavioural proxies\u2014engagement/activity before cancelling, voluntary vs involuntary (failed renewal) split, tenure patterns (day-30 spike), and country/channel distribution\u2014clearly labelled as correlates rather than proven causes (e.g., 'correlate, not proven cause', 'likely reflects lack of perceived value'). It avoids asserting reasons as fact and includes explicit caveats about the lack of direct 'why' data."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 20,
+        "sql_calls": 16,
+        "turns": 20,
+        "latency_s": 230.49,
+        "usage": {
+          "input_tokens": 495159,
+          "output_tokens": 11344,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "98.7% of cancellations are voluntary, with 59.8% occurring exactly at day 30 (first billing cycle); voluntary churners show 60% lower engagement than retained subscribers in their final month.",
+      "headline_value": 0.987,
+      "answer_markdown": "# Why did subscribers cancel?\n\n**Answer:** 98.7% of the 8,257 cancellations were voluntary (user chose to cancel); only 1.3% were involuntary (payment failure). The dominant pattern is a massive spike at exactly 30 days\u201459.8% of voluntary churners cancelled after their first billing cycle\u2014with engagement in the final month far below that of retained subscribers (7.5 vs 18 active days, 27 vs 64 subscription views).\n\n## What the numbers say\n- **Total cancelled subscribers (snapshot):** 8,257 (Q1)\n- **Voluntary churn:** 8,151 (98.7%) \u2014 users who cancelled without a preceding failed renewal charge (Q6)\n- **Involuntary churn:** 106 (1.3%) \u2014 users with a failed subscription charge in the 30 days before `subscription_end` (Q6)\n- **Voluntary churn tenure:** 4,872 (59.8%) at exactly 30 days; next peaks at 60 (1,519), 90 (773), 120 (380), 150 (235), 180 (124) days (Q12)\n- **Involuntary churn tenure:** All at 31, 61, 91, 121, 151, 181, 211, 271, 301 days (30n+1), consistent with a failed renewal attempt after the nth cycle (Q12)\n- **Monthly subscription failure rate:** 1.8\u20132.2% (Q16), matching the involuntary churn volume\n- **Engagement in last 30 days (voluntary churners vs active subs):**\n  - Active days: 7.5 vs 18.1 (Q9, Q17)\n  - Subscription views: 26.7 vs 64.2 (Q9, Q17)\n  - Watch seconds: 24k vs 54k (Q9, Q17)\n  - Sessions: 8.5 vs 20.3 (Q9, Q17)\n- **Engagement by tenure (voluntary churners):** Even long-tenure churners (180+ days) averaged only 12.3 active days and 42 sub views in their final month, well below active subscribers of similar tenure (18 days, 65 views) (Q11, Q17)\n- **Country / source:** Voluntary share is 98\u201399% in every country and acquisition channel (Q7, Q8); US accounts for 84% of cancellations (Q7)\n\n## Root causes\n| Cause | What changed, and when | Evidence (query IDs) | Impact | Confidence |\n|-------|------------------------|----------------------|--------|------------|\n| **First-month trial behaviour** | 59.8% of voluntary churners cancel exactly at day 30, after one paid month | Q12 (4,872 of 8,151 voluntary at 30 days) | Primary driver of cancellation volume | High |\n| **Low engagement before cancellation** | Voluntary churners show ~60% lower viewing and session activity than retained subs in their final month, at every tenure | Q9, Q11, Q17 | Strong correlate; likely reflects lack of perceived value | Medium (correlate, not proven cause) |\n| **Payment failures (involuntary)** | ~2% monthly charge failure rate; users with a failed charge in the 30 days before `subscription_end` churn at 30n+1 days | Q12, Q16 | 106 users (1.3% of cancellations) | High |\n| **Refunds at cancellation** | Negligible: only 11 refunds near involuntary churn at 61 days, 11 near voluntary at 30 days | Q14 | Not a material factor | High |\n\n## Bridge\n| Step | Points | Cause |\n|------|--------|-------|\n| Start: Total cancellations | 8,257 | \u2014 |\n| Involuntary (failed payment) | \u2013106 | Payment failure at renewal (1.3%) |\n| Voluntary at day 30 | \u20134,872 | First-cycle cancellation (59.8% of voluntary) |\n| Voluntary at day 60+ | \u20133,279 | Later-cycle voluntary cancellation (40.2% of voluntary) |\n| End: Unexplained | 0 | \u2014 |\n\n## Ruled out\n- **Refund-driven cancellations:** Only 22 refunds within \u00b17 days of `subscription_end` across all 8,257 cancellations (Q14)\n- **Systematic billing bug:** Failure rate is stable at 1.8\u20132.2%/month (Q16); involuntary churn matches this rate\n- **Channel-specific issue:** Voluntary share is 98\u201399% in every acquisition source (Q8)\n\n## Data issues found\n- `users.subscription_status` is a snapshot as of the last data date (2026-11-30); users who cancelled and later resubscribed appear as \"active\" or \"cancelled\" based on their latest status only. The 8,257 figure therefore counts each user once, in their final state.\n- `subscription_end` for cancelled users sometimes falls after the data window (up to 2026-12-01); those cancellations are included but their post-cancellation activity cannot be observed.\n\n## Recommendations\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| **First-month retention program** (onboarding push, content recommendations, mid-cycle value reminder) | Product / CRM | ~4,900 cancellations/year at current scale | D30 retention of new subscribers; voluntary churn rate at day 30 |\n| **Engagement-based save flow** (target users with <10 active days in month 1 with offer or content nudge) | Growth | Converts low-engagement trialers | Save rate of targeted cohort vs control |\n| **Payment retry optimization** (smarter dunning, backup payment method prompt) | Payments / Engineering | ~100 involuntary churns/year | Involuntary churn rate; recovery rate after failed charge |\n| **Instrument cancellation reason survey** (in-app at cancel click) | Product | Currently no direct \"why\" data | Survey response rate; reason distribution |\n\n## Caveats and open questions\n- **No direct \"why\" data:** The database has no cancellation-reason field, survey responses, or support-ticket tags. All voluntary-churn drivers are behavioural correlates (engagement drop), not proven causes.\n- **Cohort maturity:** The data window ends 2026-11-30; subscribers who started after 2026-10-31 have not yet reached a full 30-day cycle, so early-churn volume will rise as those cohorts mature.\n- **Resubscription not tracked:** A user who cancels and later resubscribes appears only in their latest state; repeat churn cycles are invisible.",
+      "wall_s": 236.8
+    },
+    {
+      "id": "E17",
+      "category": "dq_trap",
+      "question": "What was total net revenue from June to November 2026?",
+      "numeric": {
+        "pass": true,
+        "truth": 193339.16999996008,
+        "candidates": [
+          193339.17,
+          2026.0,
+          193339.17
+        ],
+        "tol": {
+          "rel": 0.01
+        }
+      },
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The answer correctly detects the data-quality trap (google_play refunds stored as positive amounts in Oct\u2013Nov 2026), quantifies the gap between the naive as-stored sum ($196,400.49) and the corrected value ($193,339.17), and reports the corrected net revenue matching the reference headline value ($193,339.17). It does not report the naive sum without flagging the issue, so it passes the rubric."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 10,
+        "sql_calls": 6,
+        "turns": 9,
+        "latency_s": 76.79,
+        "usage": {
+          "input_tokens": 99091,
+          "output_tokens": 3524,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "Total net revenue June\u2013November 2026 was $193,339.17 after correcting a refund sign issue.",
+      "headline_value": 193339.17,
+      "answer_markdown": "**Answer:** Total net revenue from June to November 2026 was **$193,339.17** (Q13).\n\n**How I measured it:** Net revenue = sum of `amount_usd` for successful transactions (charges minus refunds) in the `transactions` table, filtered to `date` between 2026-06-01 and 2026-11-30 inclusive. The documented convention is that refunds are stored as negative amounts. Data-quality checks (Q5) revealed that refunds via `google_play` in October and November 2026 were stored as **positive** amounts (109 refunds totaling $705.91 in Oct, 125 refunds totaling $824.75 in Nov), violating the convention. I corrected this by forcing those refunds to negative, reducing the raw sum of $196,400.49 (Q1) by $1,530.66 (2 \u00d7 the positive refund amounts) to $193,339.17 (Q13). The `fct_user_month` model (Q14) matches the uncorrected raw sum, so it carries the same issue.\n\n**Checks:** \n- Nulls: none in key columns (Q2).\n- Primary-key duplicates: none (Q3).\n- Date coverage: complete, 183 days with rows, no tail drop-off (Q4).\n- Sign convention: **fail** \u2013 google_play refunds in Oct\u2013Nov are positive (Q5).\n- Distinct amounts: only list prices ($9.99, $1.99, $0.99) appear (Q6).\n- Duplicate charges within 5 min: 121 pairs across the window (~0.4% of charges) (Q7).\n- Failure rates: 3\u20134% across methods/months (Q8).\n- Orphan user_ids: none (Q9).\n\n**Confidence:** Medium. The correction is well-founded (the sign convention is documented and all other refund methods/months follow it), but the root cause of the google_play sign flip in the last two months is unknown. If those refunds were intentionally recorded as positive (e.g., a different accounting treatment), the true net revenue would be the uncorrected $196,400.49.",
+      "wall_s": 87.3
+    },
+    {
+      "id": "E18",
+      "category": "dq_trap",
+      "question": "What was the refund rate by month?",
+      "judge": {
+        "pass": true,
+        "score": 9,
+        "failure_type": "none",
+        "rationale": "Monthly count-based refund rates match the reference facts exactly (4.92%, 4.68%, 4.43%, 5.40%, 4.41%, 4.84% for Jun\u2013Nov 2026), are roughly in the 2\u20135% range, and show no clear trend. The answer also flags the sign anomaly \u2014 234 of 1,572 refund rows (14.9%) have positive amounts, so amount-based refund measures would be wrong \u2014 and does not miss it (the per-month facts show positives only in Oct/Nov, totaling 109+125=234, consistent with the aggregate). Minor imprecision: it does not explicitly pinpoint October/November as the months with positive refunds, but the anomaly is clearly flagged and the counts reconcile."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 8,
+        "sql_calls": 3,
+        "turns": 9,
+        "latency_s": 40.55,
+        "usage": {
+          "input_tokens": 69392,
+          "output_tokens": 2185,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "Refund rate by month: 4.4%\u20135.4% (Jun\u2013Nov 2026), lowest in Aug/Oct (~4.4%), peak in Sep (5.4%)",
+      "headline_value": 0.048,
+      "answer_markdown": "**Answer:** The refund rate (refund rows \u00f7 successful subscription & PPV charges) ranged from 4.4% to 5.4% across the six months in the data window (Jun\u2013Nov 2026). It was lowest in August and October (~4.4%) and peaked in September at 5.4% (Q3).\n\n| Month | Refunds | Successful charges | Refund rate |\n|-------|---------|-------------------|-------------|\n| 2026-06 | 285 | 5,791 | 4.92% |\n| 2026-07 | 296 | 6,324 | 4.68% |\n| 2026-08 | 289 | 6,521 | 4.43% |\n| 2026-09 | 247 | 4,577 | 5.40% |\n| 2026-10 | 218 | 4,941 | 4.41% |\n| 2026-11 | 237 | 4,901 | 4.84% |\n\n**How I measured it:** Used the metric-catalog definition of `refund_rate`: count of `type = 'refund'` rows divided by count of successful `subscription` and `ppv` charges, grouped by calendar month. The six months cover the full data window (2026-06-01 to 2026-11-30).\n\n**Checks:** \n- Refund counts in `transactions` match the `refunds` column in `fct_user_month` exactly for every month (Q3 vs Q5).\n- Refund amounts are mostly stored as negative (per documented convention), but 234 of 1,572 refund rows (14.9%) have positive amounts (Q4). This does not affect the count-based refund rate reported here, but it would affect any amount-based net-revenue calculation.\n\n**Confidence:** High. The metric follows the governed definition, the two source tables agree on counts, and the time window is complete.",
+      "wall_s": 56.5
+    },
+    {
+      "id": "E19",
+      "category": "dq_trap",
+      "question": "Is Android checkout broken?",
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The agent correctly concludes that Android checkout is NOT broken. It identifies the Simpson's-paradox structure: the overall Android payer rate is lower/declining, but the gap is explained by acquisition mix (more Android users from low-paying influencer/TikTok channels) rather than a checkout defect, failure rates are similar across payment methods (Google Play ~ App Store ~ card), and payer rates within channels are stable. This matches the rubric's pass condition and the reference facts (within-market payer rates are in line across platforms; google_play/app_store/card failed shares are all ~3.5\u20133.8%). The agent does not claim Android checkout is broken, and it correctly reads the mix effect as mix, not behavior change. Per instructions, unverified numbers from the agent's own queries are not treated as wrong; the conclusion and reasoning are what the rubric assesses."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 20,
+        "sql_calls": 16,
+        "turns": 20,
+        "latency_s": 199.33,
+        "usage": {
+          "input_tokens": 348472,
+          "output_tokens": 10454,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "Android checkout is not broken; Google Play failure rates (3.2\u20133.6%) match App Store and card, and the lower Android payer rate is due to acquisition mix shift toward low-intent channels (influencer, TikTok), not checkout failures.",
+      "headline_value": null,
+      "answer_markdown": "Based on my analysis of transaction failure rates, payer rates, revenue, and acquisition mix across platforms, **Android checkout is not broken**. The failure rates on Google Play are stable and comparable to iOS (App Store) and card payments. The lower payer rate on Android is explained by acquisition channel mix, not checkout issues.\n\n**Answer:** Android checkout is functioning normally. Google Play failure rates are 3.2\u20133.6% overall (subscription ~2%, PPV ~5%), comparable to App Store (3.1\u20134.3%) and card (3.0\u20133.8%). Android's lower payer rate (21% vs iOS 35%) is driven by acquisition mix\u2014Android gets disproportionately more low-intent users from influencer and TikTok ads\u2014not by checkout failures. Android revenue is actually higher than iOS in absolute terms due to larger MAU. (Q1, Q2, Q3, Q9, Q10, Q13, Q15)\n\n## What the numbers say\n\n| Metric | Android (Google Play) | iOS (App Store) | Card/Web |\n|--------|----------------------|-----------------|----------|\n| **Overall failure rate** | 3.2\u20133.6% | 3.1\u20134.3% | 3.0\u20133.8% |\n| **Subscription failure rate** | 1.9\u20132.4% | 1.5\u20132.0% | 0.7\u20132.5% |\n| **PPV failure rate** | 4.8\u20136.5% | 5.5\u20137.0% | 3.7\u20136.7% |\n| **Payer rate (Nov 2026)** | 21.1% | 34.3% | 36.0% |\n| **Monthly revenue (Nov 2026)** | $16,672 | $12,819 | $3,222 |\n| **MAU (Nov 2026)** | 9,409 | 4,666 | 1,140 |\n| **ARPPU (Nov 2026)** | $8.40 | $8.02 | $7.86 |\n\n- Failure rates have been **stable or improving** across all payment methods over Jun\u2013Nov 2026 (Q3).\n- Android generates **more total revenue** than iOS because it has ~2\u00d7 the MAU (Q4, Q5).\n- ARPPU is similar across platforms ($7.8\u20138.6), meaning paying Android users spend just as much (Q10).\n\n## Root causes\n\n| Cause | What changed, and when | Evidence | Impact | Confidence |\n|-------|------------------------|----------|--------|------------|\n| **Acquisition mix shift on Android** | From Sep 2026, Android new users from `influencer` and `tiktok_ads` surged (1,415\u21922,112 and 2,065\u21922,996), while iOS saw smaller increases. These channels have payer rates of 11\u201313% on Android vs 37\u201338% for `google_ads`/`meta_ads`. | Q13, Q15 | Explains the drop in Android payer rate from ~28% (Jun\u2013Aug) to ~21% (Sep\u2013Nov) | High |\n| **No checkout degradation** | Google Play failure rates flat at 3.2\u20133.6% all six months; subscription failures ~2%, PPV ~5%. Identical pattern on App Store. | Q3, Q33 | Rules out a technical checkout issue | High |\n\n## Bridge: Android payer rate Jun vs Nov 2026\n\n| Step | Payer rate | Cause |\n|------|------------|-------|\n| Jun 2026 (baseline) | 28.0% | |\n| Mix shift: influencer share 10%\u219222%, tiktok_ads 15%\u219232% | \u20137.0 pp | Low-intent channels grew 2\u20133\u00d7 on Android |\n| Residual (behaviour within channels) | 0 pp | Payer rates within each channel stable (Q13) |\n| **Nov 2026** | **21.1%** | |\n\n## Ruled out\n\n- **Google Play failure spike**: Failure rate flat at 3.2\u20133.6% all months (Q3, Q33).\n- **Subscription-specific failure**: Sub failures 1.9\u20132.4%, lower than PPV and stable (Q33).\n- **Revenue decline**: Android revenue grew from $13.8K to $16.7K Jun\u2192Nov (Q4).\n- **ARPPU drop**: Android ARPPU rose from $7.33 to $8.40 (Q10).\n\n## Data issues found\n\n- **Refund sign convention violated for Google Play in Oct\u2013Nov**: 109 (Oct) and 125 (Nov) refund rows stored as **positive** amounts instead of negative (Q19). This inflates gross revenue and net revenue if summed naively. The payer-rate and failure-rate analyses above use **counts**, not amounts, so they are unaffected. Fix the pipeline to store refunds as negative for Google Play.\n\n## Recommendations\n\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| **Fix refund sign for Google Play** | Data Engineering | Accurate net revenue reporting; finance reconciliation | Refund amounts negative in transactions for google_play (Q19) |\n| **Optimize paid acquisition on Android** | Growth/UA | Influencer/TikTok bring volume but 3\u00d7 lower payer rate; shifting budget to google_ads/meta_ads would lift Android payer rate toward iOS levels | Payer rate by channel on Android (Q13); cost per payer by channel |\n| **Monitor checkout health weekly** | Product/Engineering | Early detection of real regressions | Weekly failure rate by payment_method \u00d7 type; alert if >5% absolute change |\n\n## Caveats and open questions\n\n- The data cannot tell us **why** users fail to pay (no decline-reason codes, no survey data). Failure rates are a proxy for checkout health.\n- Cohort maturity: Users acquired in Nov have not completed a full 30-day window; their payer rates will rise slightly.\n- Web platform uses `card` payment method; its payer rate (36%) is similar to iOS, suggesting the Android gap is not inherent to Google Play.\n- The refund sign bug affects Oct\u2013Nov revenue numbers; use `force_negative` handling or filter refunds when summing amounts.",
+      "wall_s": 218.8
+    },
+    {
+      "id": "E20",
+      "category": "premise_check",
+      "question": "Why did revenue grow in Q2?",
+      "judge": {
+        "pass": true,
+        "score": 10,
+        "failure_type": "none",
+        "rationale": "The agent correctly rejects the false premise: revenue did not grow in Q2, it fell. It provides matching numbers (Q1 $99,928 to Q2 $96,472 as stored, \u20133.5%) and notes the refund sign correction makes the decline worse (corrected Q2 ~$93,411, about \u20136.5%, shown as index 93.5). It then addresses what actually happened via root causes, a bridge, ruled-out explanations, and data issues. It does not explain growth that did not happen."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 14,
+        "sql_calls": 9,
+        "turns": 13,
+        "latency_s": 109.54,
+        "usage": {
+          "input_tokens": 142309,
+          "output_tokens": 6715,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "Revenue fell 3.5% in Q2 (Sep\u2013Nov) vs Q1 (Jun\u2013Aug), driven by a channel mix shift to TikTok/Influencer (low payer rates) and collapsing payer rates in those channels, partially offset by MAU growth and lower refunds.",
+      "headline_value": -0.035,
+      "answer_markdown": "# Revenue did not grow in Q2 \u2014 it fell 3.5%\n\n**Answer:** Net revenue declined from $99,928 in Q1 (Jun\u2013Aug) to $96,472 in Q2 (Sep\u2013Nov), a **\u20133.5% change** (Q1, Q2, Q3). The premise of the question is incorrect; revenue shrank despite a 17.9% rise in MAU.\n\n## What the numbers say\n| Metric | Q1 (Jun\u2013Aug) | Q2 (Sep\u2013Nov) | Change |\n|--------|--------------|--------------|--------|\n| Net revenue | $99,928 | $96,472 | **\u20133.5%** |\n| MAU (quarterly avg) | 12,466 | 14,888 | **+19.4%** |\n| Paying users | 8,471 | 7,202 | **\u201315.0%** |\n| Payer rate | 29.9% | 21.6% | **\u20138.3 pp** |\n| ARPPU | $7.76 | $8.20 | **+5.6%** |\n| Refunds | \u2013$4,903 | \u2013$1,524 | **\u201369%** |\n\nMonthly net revenue peaked in August ($35,774) then dropped sharply in September ($30,572) and never recovered (Q3).\n\n## Root causes\n| Cause | What changed, and when | Evidence | Impact | Confidence |\n|-------|------------------------|----------|--------|------------|\n| **Channel mix shift to low-payer-rate sources** | TikTok Ads MAU +152% (1,491 \u2192 3,761), Influencer MAU +147% (1,063 \u2192 2,629); Meta Ads MAU \u201330%, Google Ads MAU \u201333% | Q6, Q7, Q9 | **Large negative** \u2013 mix effect \u201315.6 index points | High |\n| **Payer rate collapse in scaled channels** | TikTok payer rate 21.2% \u2192 14.3%; Influencer 20.1% \u2192 14.4%; Organic 34.5% \u2192 29.7% | Q9 (rate_step_by_segment) | **Large negative** \u2013 rate effect \u201313.1 index points | High |\n| **High-value channels shrunk** | Meta Ads revenue \u201322% ($8.98M \u2192 $6.98M); Google Ads \u201325% ($8.22M \u2192 $6.18M) | Q6 | **Medium negative** | High |\n| **Refunds improved** | Refunds fell 69% (\u2013$4.9M \u2192 \u2013$1.5M), lifting ARPPU | Q4, Q10 | **Positive offset** (+2.8 index points) | High |\n| **Volume (MAU) grew** | MAU +19.4% overall | Q9 | **Positive** (+19.4 index points) | High |\n\n## Bridge (index, Q1 = 100)\n| Step | Index points | Cause |\n|------|--------------|-------|\n| Start (Q1 monthly avg net revenue) | 100.0 | \u2014 |\n| Volume (MAU growth) | +19.4 | More users |\n| Mix (shift to TikTok/Influencer) | \u201315.6 | Lower-paying segments grew share |\n| Rate (payer rate fell within segments) | \u201313.1 | Especially TikTok, Influencer, Organic |\n| Price (ARPPU rose, refunds fell) | +2.8 | Higher ARPPU, fewer refunds |\n| **End (Q2 monthly avg)** | **93.5** | **Net \u20136.5%** |\n\nResidual \u2248 0.\n\n## Ruled out\n- **Price increase**: Subscription price is fixed at $9.99; PPV prices fixed at $0.99/$1.99. ARPPU rose only because refunds dropped (Q4, Q15).\n- **Seasonal content release**: No content_catalog release_date spike in Q2 (not tested but no evidence in revenue pattern).\n- **Payment failures**: Failure rates stable ~3\u20134% across methods/months (Q17).\n\n## Data issues found\n- **Refund sign convention broken for Google Play in Oct\u2013Nov**: 234 refund rows stored as **positive** amounts (Q14). This *understates* true refunds in Q2, making net revenue look slightly better than reality. The decomposition used `refund_handling='force_negative'` to correct this.\n- **121 duplicate charge pairs** within 5 minutes (Q16) \u2014 minor inflation of gross revenue.\n\n## Recommendations\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| **Audit TikTok/Influencer creative & targeting** \u2014 payer rates ~14% vs 40%+ for Meta/Google | UA Lead | ~$3.7M quarterly revenue gap if TikTok/Influencer payer rates matched Meta | Payer rate by channel (monthly) |\n| **Reallocate spend from TikTok/Influencer to Meta/Google** while fixing quality | Growth Lead | Current mix costs ~15.6 index points in revenue | Marketing spend mix vs revenue mix |\n| **Investigate Organic payer rate drop** (34.5% \u2192 29.7%) \u2014 possible free-limit change or content fatigue | Product | Organic is largest channel by MAU | Organic payer rate, free-limit hit rate |\n| **Fix refund sign bug on Google Play** | Data Eng | ~$1.5K/mo misstated net revenue | Refund sign check (Q14) passes |\n\n## Caveats and open questions\n- The decomposition order (volume \u2192 mix \u2192 rate \u2192 price) fixes the split; swapping mix/rate moves 1\u20132 points between them.\n- Cohort maturity: Q2 includes users from late November who haven't completed a full month; payer rate may tick up slightly.\n- No direct \"why\" for payer rate drop (no survey/reason codes); the correlates above are proxies, not proven causes.",
+      "wall_s": 117.6
+    },
+    {
+      "id": "E21",
+      "category": "end_to_end",
+      "question": "MAU is up 20% QoQ but revenue is flat. Board meeting Thursday. Figure out what's happening and what we should do about it.",
+      "judge": {
+        "pass": true,
+        "score": 7,
+        "failure_type": "none",
+        "rationale": "The answer gets the four pass-critical elements substantially right: (1) revenue is not flat \u2014 corrected Q2 net revenue fell about 6.5% ($33.3k \u2192 $31.1k monthly avg) while MAU rose ~19.4%, matching the reference; (2) it correctly identifies the Google Play refund sign bug from October inflating reported revenue, though it understates the magnitude (~$0.1k/mo vs roughly ~$1k/mo / ~2\u20133 points implied by as-stored vs corrected Q2); (3) it correctly identifies the free-episode limit rising 5\u21928 on 1 Sep reducing paywall hits and payer rates, including the US as a no-mix-change control; (4) it correctly identifies the Meta/Google \u2192 TikTok/influencer acquisition shift bringing low-paying PH/ID/BR/MX users at the same $9.99 price, raising MAU while lowering payer rate by mix. It also covers the new-market vs US interaction (5), a bridge, and strong recommendations with owners and metrics (7), including restating revenue/fixing refund logging, testing the free allowance, cost-per-payer channel judgment, and regional pricing. It rules out price changes, content, and payment failures, though it does not explicitly call out Android checkout (mix) among the ruled-outs (6). No false causes are asserted. The main deduction is the refund-magnitude understatement and the minor ruled-out gap, so it covers about five of seven elements well."
+      },
+      "pass": true,
+      "failure_type": "none",
+      "agent": {
+        "stop": "submitted",
+        "submitted": true,
+        "tool_calls": 22,
+        "sql_calls": 13,
+        "turns": 21,
+        "latency_s": 191.08,
+        "usage": {
+          "input_tokens": 491188,
+          "output_tokens": 9551,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        },
+        "error": null
+      },
+      "headline": "MAU +20% but revenue \u22126.5% QoQ: free-limit increase (5\u21928) cannibalised PPV, paid-channel mix shifted to low-payer-rate TikTok/influencer, and US payer rate fell 4.8 pp. Three fixes: A/B test free limit, reallocate UA spend, diagnose US conversion funnel.",
+      "headline_value": -0.065,
+      "answer_markdown": "# MAU up 20% QoQ but revenue flat \u2013 root causes and actions\n\n**Answer:** MAU rose 20% (12,466 \u2192 14,888 monthly average) but net revenue fell 6.5% ($33.3k \u2192 $31.1k monthly average) because three independent drivers offset the volume gain: (1) the free daily episode limit was raised from 5 to 8 on 1 Sep, cannibalising ~$1.1k/mo of PPV standard revenue; (2) paid acquisition shifted from high-payer-rate channels (Meta, Google) to low-payer-rate channels (TikTok, influencer), dragging aggregate payer rate down 4.8 pp; (3) the US payer rate fell 4.8 pp (46.8% \u2192 42.0%) on its own. New-market growth (PH, ID, BR, MX) added volume but at \u00bc the US payer rate, amplifying the mix drag.\n\n## What the numbers say\n- **Q1 (Jun\u2013Aug) vs Q2 (Sep\u2013Nov) monthly averages** (Q1, Q2):\n  - MAU: 12,466 \u2192 14,888 (+19.4%)\n  - Net revenue: $33,309 \u2192 $31,137 (\u22126.5%)\n  - Payer rate: 28.3% \u2192 23.5% (\u22124.8 pp)\n  - ARPPU: $9.44 \u2192 $8.90 (\u22125.7%)\n  - Revenue/MAU: $2.67 \u2192 $2.09 (\u221221.7%)\n\n- **Free-limit change** (Q3, Q4, Q11): observed max free views/day jumped from 5 to 8 on 1 Sep. PPV standard views fell 64% (2,251 \u2192 802/mo); PPV standard revenue fell 28% ($3,928 \u2192 $2,815/mo). 4,775\u20135,351 users/mo now consume the extra 3 free episodes.\n\n- **Acquisition mix shift** (Q5, Q6, Q7): TikTok share of paid MAU rose 10% \u2192 23% (payer rate 21% \u2192 14%); Influencer 8% \u2192 17% (20% \u2192 14%). Meta fell 22% \u2192 13% (41% \u2192 43%); Google 21% \u2192 11% (40% \u2192 42%). Paid-channel spend shifted similarly (Q6).\n\n- **US payer-rate decline** (Q8, Q23): US payer rate dropped steadily from 45.3% (Jun) to 41.9% (Nov) across *all* channels \u2013 not a mix shift. US MAU also slipped 3.5%.\n\n- **New-market growth** (Q8, Q2, Q24): New-market MAU +56% (4,819 \u2192 7,507) but payer rate fell 15.3% \u2192 11.1%. They now contribute 50% of MAU but only 20% of revenue.\n\n- **Data-quality note** (Q15): Refunds on Google Play in Oct\u2013Nov are stored as positive amounts, inflating reported net revenue by ~$0.1k/mo in those months. The decomposition used `force_negative` to correct this.\n\n## Root causes\n| Cause | What changed, and when | Evidence | Impact (index pts on revenue, Q1=100) | Confidence |\n|-------|------------------------|----------|--------------------------------------|------------|\n| Free limit 5\u21928 (1 Sep) | PPV standard views \u221264%, PPV standard rev \u221228% | Q3, Q4, Q11, Q10 | \u221214.7 (rate step) | High |\n| Paid-channel mix shift | TikTok 10%\u219223%, Influencer 8%\u219217% of paid MAU; both have \u00bd the payer rate of Meta/Google | Q5, Q6, Q7 | \u221213.97 (mix step) | High |\n| US payer rate decline | 46.8%\u219242.0% across all US channels; US MAU \u22123.5% | Q8, Q23, Q2 | \u22128.38 (US rate step) | Medium |\n| New-market volume at low monetisation | New-market MAU +56%, payer rate 15%\u219211% | Q8, Q2, Q24 | Captured in mix + rate steps | High |\n\n## Bridge (index points, Q1 = 100)\n| Step | Points | Cause |\n|------|--------|-------|\n| Start (Q1 monthly avg net revenue) | 100.0 | \u2014 |\n| Volume (MAU +19.4%) | +19.43 | More users |\n| Mix (segment shares) | \u221213.97 | Shift to new markets & low-payer-rate channels |\n| Rate (payer rate within segments) | \u221214.70 | Free-limit cannibalisation + US payer-rate drop + new-market rate drop |\n| Price (ARPPU incl. refunds) | +2.72 | Slightly higher ARPPU in US & some markets |\n| **End (Q2 monthly avg net revenue)** | **93.48** | **\u22126.5%** |\n\nResidual: 0.0 (decomposition accounts for all change).\n\n## Ruled out\n- **Price changes**: Subscription ($9.99) and PPV ($0.99/$1.99) list prices unchanged (Q16).\n- **Refund surge**: Refund count fell 285\u2192237/mo; refund amount turned positive in Oct\u2013Nov only due to sign bug (Q10, Q15).\n- **Charge failures**: Failure rates stable ~3\u20134% (Q18).\n- **Content catalogue shift**: No evidence of premium/standard mix change in views.\n\n## Data issues found\n- **Refund sign bug on Google Play (Oct\u2013Nov)**: 109+125 refund rows stored as positive, inflating net revenue by ~$0.1k/mo. Fixed in decomposition via `force_negative`. Engineering should correct the pipeline.\n- **121 duplicate charge pairs** within 5 min (Q17) \u2013 low volume, monitor.\n\n## Recommendations\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| **A/B test free limit**: revert to 5 episodes for 50% of non-subscribers; measure PPV standard conversion, payer rate, retention at 30/60 days | Product / Growth | ~$1.1k/mo PPV revenue + potential sub uplift from tighter limit | PPV standard views/user, payer rate, D30 retention (guardrail) |\n| **Reallocate paid spend**: shift budget from TikTok/influencer back to Meta/Google until CAC/payer parity; test creative to improve TikTok payer rate | UA / Marketing | $30k+/mo spend on channels delivering 14% payer rate vs 42% | Cost per payer by channel (30-day), payer rate by channel, ROAS |\n| **Diagnose US payer-rate drop**: run survey + funnel analysis (paywall views \u2192 start trial \u2192 convert) by cohort; check if price sensitivity, content fatigue, or competitor promo | Product / Data | US = 65% of revenue; 4.8 pp drop = ~$2.9k/mo lost | Paywall view rate, trial start rate, conversion rate, NPS |\n| **New-market monetisation playbook**: localise pricing (PPP), test lower sub price ($4.99), add carrier billing, improve premium content supply | Intl / Product | New markets = 50% MAU, 20% revenue; 4\u00d7 revenue headroom | ARPPU by country, payer rate by country, revenue/MAU |\n| **Fix refund sign pipeline** | Data Eng | Accurate revenue reporting, board trust | Zero sign violations in `amount_sign_by_type_method_month` check |\n\n## Caveats and open questions\n- **US payer-rate driver unknown** \u2013 no reason codes in data. Survey or qualitative research needed (Medium confidence it's not a mix artifact).\n- **Free-limit A/B must guard retention** \u2013 the 3 extra free episodes may be retaining marginal users; measure D30/D60.\n- **Cohort maturity**: Sep\u2013Nov signups haven't completed full 30-day payer windows; Q2 payer rates will rise slightly as they mature.\n- **Seasonality**: Only two quarters observed; cannot separate trend from seasonality.",
+      "wall_s": 242.5
+    }
+  ]
+}
