@@ -68,3 +68,15 @@ def test_schema_and_catalog_are_model_sized():
     s = T.Session()
     assert len(T.to_tool_content(T.get_schema(s))) < T.MAX_RESULT_CHARS
     assert len(T.to_tool_content(T.get_metric_catalog(s))) < T.MAX_RESULT_CHARS
+
+
+def test_number_fields_sent_as_text_are_coerced():
+    from agent.tools import validate_input
+    base = {"answer_markdown": "x", "headline": "x", "confidence": "high", "query_ids": ["Q1"]}
+    for raw, want in [("15057", 15057.0), ("15,057", 15057.0), ("$12,345.60", 12345.6),
+                      ("8.5%", 0.085), ("null", None), (" -0.283 ", -0.283)]:
+        args = {**base, "headline_value": raw}
+        assert validate_input("submit_answer", args) is None, raw
+        assert args["headline_value"] == (want if want is None else __import__("pytest").approx(want))
+    bad = {**base, "headline_value": "about 15k"}
+    assert "headline_value" in (validate_input("submit_answer", bad) or "")
