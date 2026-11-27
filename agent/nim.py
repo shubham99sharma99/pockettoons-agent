@@ -106,7 +106,7 @@ class NimLLM:
     """Hosted NVIDIA NIM through the OpenAI-compatible chat completions API."""
 
     def __init__(self, model: str | None = None, max_tokens: int = 4096, temperature: float | None = None,
-                 client: Any = None):
+                 client: Any = None, sleep: Any = None):
         self.model = model or NIM_DEFAULT_MODEL
         self.max_tokens = int(os.environ.get("PT_NIM_MAX_TOKENS", max_tokens))
         self.temperature = float(os.environ.get("PT_NIM_TEMPERATURE", "0.2")) if temperature is None else temperature
@@ -117,11 +117,24 @@ class NimLLM:
                 raise RuntimeError(f"{NIM_KEY_ENV} is not set.")
             client = openai.OpenAI(base_url=NIM_BASE_URL, api_key=key, max_retries=4, timeout=180)
         self.client = client
+        self.rate_wait_s = float(os.environ.get("PT_NIM_RATE_WAIT_S", "600"))
+        self.sleep = sleep or __import__("time").sleep
 
     def complete(self, messages: list[dict], **kw) -> Any:
-        return self.client.chat.completions.create(
-            model=self.model, messages=messages, max_tokens=self.max_tokens,
-            temperature=self.temperature, **kw)
+        """One chat completion. The free tier rate-limits per model (HTTP 429, no reset
+        header), so back off 30 s, 60 s, 120 s, ... up to PT_NIM_RATE_WAIT_S in total."""
+        waited, delay = 0.0, 30.0
+        while True:
+            try:
+                return self.client.chat.completions.create(
+                    model=self.model, messages=messages, max_tokens=self.max_tokens,
+                    temperature=self.temperature, **kw)
+            except Exception as e:  # noqa: BLE001
+                if getattr(e, "status_code", None) != 429 or waited + delay > self.rate_wait_s:
+                    raise
+                self.sleep(delay)
+                waited += delay
+                delay = min(delay * 2, 240.0)
 
     def step(self, system, messages, tools, on_text):
         resp = self.complete(to_openai_messages(system, messages),

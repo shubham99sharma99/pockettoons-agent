@@ -112,6 +112,7 @@ class AgentResult:
     evidence: list[dict]
     hypotheses: list[dict]
     tool_trace: list[dict] = field(default_factory=list)
+    error: str | None = None
 
     def to_dict(self) -> dict:
         return self.__dict__.copy()
@@ -156,6 +157,7 @@ class AnalyticsAgent:
         stop = "end_turn"
         last_text = ""
         turns = 0
+        error = None
         emit({"type": "start", "question": question, "model": self.llm.model})
 
         while turns < self.max_turns:
@@ -174,7 +176,8 @@ class AnalyticsAgent:
                 resp = self.llm.step(system, messages, T.TOOL_SPECS, on_text)
             except Exception as e:  # noqa: BLE001
                 stop = "api_error"
-                emit({"type": "error", "message": f"{type(e).__name__}: {str(e)[:300]}"})
+                error = f"{type(e).__name__}: {str(e)[:300]}"
+                emit({"type": "error", "message": error})
                 break
             _usage_add(usage, getattr(resp, "usage", None))
             content = list(resp.content)
@@ -235,7 +238,7 @@ class AnalyticsAgent:
             question=question, model=self.llm.model, answer=answer, submitted=submitted, stop=stop,
             tool_calls=s.tool_calls, sql_calls=s.sql_calls, turns=turns,
             latency_s=round(self.clock() - t0, 2), usage=usage,
-            evidence=s.log.entries, hypotheses=list(s.hypotheses.values()), tool_trace=trace)
+            evidence=s.log.entries, hypotheses=list(s.hypotheses.values()), tool_trace=trace, error=error)
         emit({"type": "answer", "answer": answer, "submitted": submitted})
         emit({"type": "done", "stop": stop, "tool_calls": s.tool_calls, "sql_calls": s.sql_calls,
               "latency_s": res.latency_s, "usage": usage})

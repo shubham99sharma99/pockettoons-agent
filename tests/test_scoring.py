@@ -31,8 +31,8 @@ def test_score_one_combines_numeric_and_judge():
     ok = run_eval.score_one(q, gt, res, judge_fn=lambda *a: {"pass": True, "score": 9, "failure_type": "none", "rationale": ""})
     bad = run_eval.score_one(q, gt, res, judge_fn=lambda *a: {"pass": False, "score": 2, "failure_type": "missed_dq_check", "rationale": "no flag"})
     assert ok["pass"] and not bad["pass"] and bad["failure_type"] == "missed_dq_check"
-    none = run_eval.score_one(q, gt, {"answer": None, "stop": "api_error"}, judge_fn=lambda *a: {"pass": False, "score": 0, "failure_type": "other", "rationale": ""})
-    assert none["failure_type"] == "loop_or_timeout"
+    none = run_eval.score_one(q, gt, {"answer": None, "stop": "max_turns"}, judge_fn=lambda *a: {"pass": False, "score": 0, "failure_type": "other", "rationale": ""})
+    assert none["failure_type"] == "loop_or_timeout"   # api_error is covered separately below
 
 
 def test_markdown_report_renders():
@@ -68,3 +68,21 @@ def test_eval_checkpoints_each_result_and_resumes(monkeypatch, tmp_path):
     Agent.run = lambda self, q: (asked.append(q), type("R", (), {"to_dict": lambda s: {"answer": None, "stop": "x"}})())[1]
     summary = run_eval.run(None, 1, agent_factory=Agent, resume=True)
     assert asked == ["q2"] and [r["id"] for r in summary["results"]] == ["X0", "X1", "X2"]
+
+
+def test_infrastructure_failures_are_not_blamed_on_the_agent():
+    q = {"id": "E9", "category": "simple", "question": "q", "judge": "rubric"}
+    gt = {"questions": {"E9": {}}}
+    def judge_must_not_run(*a):
+        raise AssertionError("judge called on an API failure")
+    api = run_eval.score_one(q, gt, {"answer": None, "stop": "api_error", "error": "RateLimitError: 429"},
+                             judge_fn=judge_must_not_run)
+    assert api["failure_type"] == "api_error" and api["agent"]["error"].startswith("RateLimitError")
+    ans = {"answer": {"headline": "x", "answer_markdown": "x (Q1)"}, "stop": "submitted"}
+    jfail = run_eval.score_one(q, gt, ans, judge_fn=lambda *a: (_ for _ in ()).throw(RuntimeError("429")))
+    assert jfail["failure_type"] == "judge_error"
+    slow = run_eval.score_one(q, gt, {"answer": None, "stop": "time_budget"},
+                              judge_fn=lambda *a: {"pass": False, "score": 0, "failure_type": "other", "rationale": ""})
+    assert slow["failure_type"] == "loop_or_timeout"
+    s = run_eval.summarise([api, jfail, slow])
+    assert s["infra_failures"] == 2 and "Warning" in run_eval.to_markdown(s)

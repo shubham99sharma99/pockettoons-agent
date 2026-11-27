@@ -153,3 +153,33 @@ def test_provider_switch(monkeypatch):
         importlib.reload(A)
     assert A.PROVIDER == "anthropic" and A.KEY_ENV == "ANTHROPIC_API_KEY"
     assert A.make_llm("nim").model == nim.NIM_DEFAULT_MODEL   # not the Claude default
+
+
+def test_rate_limit_backs_off_then_gives_up(monkeypatch):
+    class RateLimited(Exception):
+        status_code = 429
+
+    calls, slept = [], []
+
+    def create(**kw):
+        calls.append(kw)
+        if len(calls) < 3:
+            raise RateLimited("429")
+        return completion("ok")
+
+    llm = NimLLM(model="m", client=NS(chat=NS(completions=NS(create=create))), sleep=slept.append)
+    assert llm.complete([{"role": "user", "content": "hi"}]).choices[0].message.content == "ok"
+    assert slept == [30.0, 60.0]
+
+    monkeypatch.setenv("PT_NIM_RATE_WAIT_S", "100")
+    always = NimLLM(model="m", client=NS(chat=NS(completions=NS(create=lambda **k: (_ for _ in ()).throw(RateLimited())))),
+                    sleep=lambda s: None)
+    with pytest.raises(RateLimited):
+        always.complete([{"role": "user", "content": "hi"}])
+
+    class BadRequest(Exception):
+        status_code = 400
+    other = NimLLM(model="m", client=NS(chat=NS(completions=NS(create=lambda **k: (_ for _ in ()).throw(BadRequest())))),
+                   sleep=lambda s: pytest.fail("must not retry non-429 errors"))
+    with pytest.raises(BadRequest):
+        other.complete([])

@@ -42,11 +42,12 @@ def score_one(q: dict, gt: dict, result: dict, judge_fn=scoring.judge) -> dict:
         num = scoring.score_numeric(ans, entry.get("value"), entry.get("tol", q["numeric"]["tol"]))
         out["numeric"] = num
         passes.append(num["pass"])
-    if q.get("judge"):
+    api_failed = result.get("stop") == "api_error" and not ans
+    if q.get("judge") and not api_failed:     # don't spend judge calls on infrastructure failures
         try:
             j = judge_fn(q["question"], q["judge"], entry.get("facts"), (ans or {}).get("answer_markdown", ""))
         except Exception as e:  # noqa: BLE001
-            j = {"pass": False, "score": 0, "failure_type": "other", "rationale": f"judge error: {e}"}
+            j = {"pass": False, "score": 0, "failure_type": "judge_error", "rationale": f"judge error: {e}"}
         out["judge"] = j
         passes.append(bool(j.get("pass")))
     if not ans:
@@ -54,13 +55,17 @@ def score_one(q: dict, gt: dict, result: dict, judge_fn=scoring.judge) -> dict:
     out["pass"] = all(passes) if passes else False
     ft = (out.get("judge") or {}).get("failure_type")
     if not out["pass"]:
-        if result.get("stop") in ("max_turns", "api_error") or not ans:
+        if api_failed:
+            ft = "api_error"
+        elif ft == "judge_error":
+            pass
+        elif result.get("stop") in ("max_turns", "time_budget", "api_error") or not ans:
             ft = "loop_or_timeout"
         elif "numeric" in out and not out["numeric"]["pass"] and (not ft or ft == "none"):
             ft = "wrong_number"
     out["failure_type"] = ft if not out["pass"] else "none"
     out["agent"] = {k: result.get(k) for k in ("stop", "submitted", "tool_calls", "sql_calls", "turns",
-                                              "latency_s", "usage")}
+                                              "latency_s", "usage", "error")}
     out["headline"] = (ans or {}).get("headline")
     out["headline_value"] = (ans or {}).get("headline_value")
     out["answer_markdown"] = (ans or {}).get("answer_markdown")
@@ -68,6 +73,7 @@ def score_one(q: dict, gt: dict, result: dict, judge_fn=scoring.judge) -> dict:
 
 
 PARTIAL = RESULTS / "partial.json"
+INFRA_FAILURES = ("api_error", "judge_error")   # not the agent's fault; shown separately
 
 
 def _load_partial() -> dict[str, dict]:
@@ -141,6 +147,7 @@ def summarise(rows: list[dict]) -> dict:
         "model": DEFAULT_MODEL, "provider": PROVIDER, "judge_model": scoring.JUDGE_MODEL,
         "n": n, "passed": passed, "pass_rate": round(passed / n, 3) if n else 0,
         "by_category": by_cat, "failure_types": fails,
+        "infra_failures": sum(fails.get(k, 0) for k in INFRA_FAILURES),
         "median_latency_s": statistics.median(lat) if lat else None,
         "median_tool_calls": statistics.median(tools) if tools else None,
         "median_input_tokens": statistics.median(toks_in) if toks_in else None,
@@ -154,7 +161,11 @@ def to_markdown(summary: dict) -> str:
          f"Run {summary['run_at']} · provider `{summary.get('provider', 'anthropic')}` · agent `{summary['model']}` · judge `{summary['judge_model']}`", "",
          f"**{summary['passed']} / {summary['n']} passed ({summary['pass_rate']:.0%}).** "
          f"Median latency {summary['median_latency_s']} s, median tool calls {summary['median_tool_calls']}, "
-         f"median tokens in/out {summary['median_input_tokens']}/{summary['median_output_tokens']}.", "",
+         f"median tokens in/out {summary['median_input_tokens']}/{summary['median_output_tokens']}.", ""]
+    if summary.get("infra_failures"):
+        L += [f"> **Warning:** {summary['infra_failures']} result(s) failed on API or judge errors, not agent "
+              "behaviour. Re-run them (`--ids ...`) before reading the pass rate.", ""]
+    L += [
          "| ID | Category | Question | Expected | Agent headline | Result | Failure type | Tools |",
          "|---|---|---|---|---|---|---|---|"]
     for r in summary["results"]:
