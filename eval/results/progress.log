@@ -3,3 +3,5 @@ resuming: 15 already done, 6 to run
 E04 FAIL (api_error) tools=0 sql=0 908.1s
 E06 FAIL (api_error) tools=3 sql=1 1135.4s
 == 2026-11-27T17:33:30Z stopped: nemotron-3-ultra not responding (no reply to a 2-word prompt in 120 s); dropped E04/E06 api_error rows
+== 2026-11-27T17:33:41Z re-grade the 15 finished answers with the updated judge
+E01 PASS (none)

@@ -25,5 +25,44 @@
   "headline_value": null,
   "answer_markdown": "a (Q1)",
   "wall_s": null
+ },
+ {
+  "id": "E01",
+  "category": "simple",
+  "question": "What was MAU in October 2026?",
+  "numeric": {
+   "pass": true,
+   "truth": 15057.0,
+   "candidates": [
+    2026.0,
+    15057.0,
+    1.0,
+    2.0
+   ],
+   "tol": {
+    "rel": 0.01
+   }
+  },
+  "pass": true,
+  "failure_type": "none",
+  "agent": {
+   "stop": "end_turn",
+   "submitted": false,
+   "tool_calls": 4,
+   "sql_calls": 2,
+   "turns": 4,
+   "latency_s": 25.64,
+   "usage": {
+    "input_tokens": 27399,
+    "output_tokens": 724,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+   },
+   "error": null
+  },
+  "headline": "**Answer:** MAU in October 2026 was **15,057** users. (Q1, Q2)",
+  "headline_value": null,
+  "answer_markdown": "**Answer:** MAU in October 2026 was **15,057** users. (Q1, Q2)\n\n**How I measured it:** Monthly Active Users (MAU) is defined as distinct users with at least one session in a calendar month. I queried the `sessions` table (the source of truth per the metric catalog) for October 2026 and cross-checked against the `fct_user_month` table where `is_active = true`. Both returned 15,057.\n\n**Checks:** Cross-verified across two independent tables (sessions and fct_user_month); results match exactly. No data-quality issues detected for this metric in this period.\n\n**Confidence:** High \u2014 consistent across source and modeled tables, metric definition is unambiguous.",
+  "wall_s": 26.1
  }
 ]
