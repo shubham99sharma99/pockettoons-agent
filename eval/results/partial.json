@@ -57,9 +57,9 @@
   },
   "judge": {
    "pass": true,
-   "score": 10,
+   "score": 9,
    "failure_type": "none",
-   "rationale": "The answer states the definition used (subscription period covering 2026-11-30 via subscription_start/subscription_end), gives a count (2,840) close to the reference snapshot value (2,835), and cross-checks both the snapshot (2,835 with status='active') and the renewal/ledger evidence (2,835 November charges), explaining the 5-subscriber difference. This satisfies the rubric's pass criteria."
+   "rationale": "The answer states a clear definition (active if subscription period covers 2026-11-30: subscription_start <= date AND (subscription_end IS NULL OR subscription_end > date)) and gives a count of 2,840, which is close to the reference snapshot value of 2,835 (off by 5, ~0.18%). It cross-checks both the ledger/renewals side (2,835 successful November charges) and the users.subscription_status snapshot (2,835 active), explaining the 5-user difference as cancelled-status users whose subscription_end still covers 30 Nov. This satisfies the rubric: close to the snapshot/ledger value, definition stated, and both sides cross-checked. The headline number does not exactly equal the reference snapshot, but it is within the rubric's 'close' tolerance and is justified by a clearly stated alternative definition."
   },
   "pass": true,
   "failure_type": "none",
@@ -183,7 +183,7 @@
    "pass": true,
    "score": 10,
    "failure_type": "none",
-   "rationale": "The answer provides both monthly MAU values (14,392 in September 2026 and 15,057 in October 2026) and the percentage change (+4.6%, an increase of 665 users). The arithmetic is internally consistent (665 / 14,392 \u2248 4.62%), and it states the metric definition and data-quality checks. No rubric traps are triggered."
+   "rationale": "The answer provides both monthly MAU values (14,392 in September 2026 and 15,057 in October 2026) and the percentage change (+4.6%, an increase of 665 users). The arithmetic is consistent: 665 / 14,392 \u2248 4.62%, which rounds to 4.6%. This satisfies the rubric's pass condition of giving both monthly values and the percentage change."
   },
   "pass": true,
   "failure_type": "none",
@@ -215,7 +215,7 @@
    "pass": true,
    "score": 10,
    "failure_type": "none",
-   "rationale": "The answer correctly identifies TikTok Ads as the channel with the largest spend increase from July to October 2026. The numbers match the reference facts exactly: July $3,424.77, October $10,580.42, absolute increase $7,155.65, and relative growth ~208.9%. This is the largest increase among all channels (influencer +$5,588.53; google_ads and meta_ads decreased). No traps or errors."
+   "rationale": "The answer correctly names TikTok Ads as the channel with the largest spend growth from July to October 2026, reporting an absolute increase of $7,155.65 (from $3,424.77 to $10,580.42) and a relative growth of 208.9%. These figures match the reference facts exactly (tiktok_ads: jul 3424.77, oct 10580.42, difference 7155.65), and TikTok Ads is indeed the leader in absolute growth versus influencer (+5588.53) and the two declining channels (google_ads and meta_ads). No traps were triggered and no unsupported claims were made."
   },
   "pass": true,
   "failure_type": "none",
@@ -247,7 +247,7 @@
    "pass": true,
    "score": 10,
    "failure_type": "none",
-   "rationale": "The answer reports June 2026 D30 retention as 13.13% and September 2026 as 12.25%, both matching the reference facts (0.1312988845 and 0.1224858998) well within 1 percentage point. It explicitly states the retention definition used (\u22651 session on days 30\u201336 after signup, single session qualifies), satisfying the rubric. No metric definition error, wrong join/filter, or hallucinated value is present."
+   "rationale": "The agent reports June D30 retention of 13.13% and September D30 retention of 12.25%, both matching the reference facts (0.1312988845 and 0.1224858998) well within 1 percentage point. It clearly states the definition used: \u22651 session on days 30\u201336 after signup."
   },
   "pass": true,
   "failure_type": "none",
@@ -279,7 +279,7 @@
    "pass": true,
    "score": 10,
    "failure_type": "none",
-   "rationale": "All per-channel cohort sizes, paid counts, and 30-day payment shares match the reference facts exactly (e.g., meta_ads 29.81%, google_ads 28.75%, tiktok_ads 13.70%, influencer 14.08%), well within the ~1 pt tolerance. The answer correctly identifies tiktok_ads and influencer as the lowest-converting channels. No metric definition, join/filter, DQ, or causality issues are present."
+   "rationale": "All per-channel shares match the reference facts exactly (e.g., meta_ads 29.81%, google_ads 28.75%, referral 24.03%, organic 23.48%, influencer 14.08%, tiktok_ads 13.70%), well within the ~1 pt tolerance. The answer also correctly identifies the worst-converting channels as tiktok_ads (lowest) and influencer (second lowest), satisfying the rubric's requirement."
   },
   "pass": true,
   "failure_type": "none",
@@ -309,9 +309,9 @@
   "question": "What was the cost per paying user by channel for Q2 signups?",
   "judge": {
    "pass": false,
-   "score": 4,
+   "score": 5,
    "failure_type": "did_not_state_assumption",
-   "rationale": "The cost-per-payer numbers are correct and match the 30-day payer window facts (TikTok $37.60, Influencer $40.56, Meta $37.24, Google $33.10), and the payer definition is stated (distinct Q2 signups with a successful subscription/PPV charge within 30 days of signup). However, the answer fails two required rubric elements: (1) it never contrasts cost per payer with CPI or notes that the cheapest install channels (TikTok $3.65, Influencer $4.20) are not the cheapest per payer (Google $33.10 is cheapest), and (2) it does not note that recent cohorts have had less time to pay. Because the rubric requires all of these, the answer does not pass."
+   "rationale": "The cost-per-payer numbers match the reference facts for the 30-day payer window (Google $33.10, Meta $37.24, TikTok $37.60, Influencer $40.56) and the payer definition is stated. However, the answer does not contrast cost per payer with CPI (the cheapest install channel, TikTok, is not the cheapest per payer) and does not note that recent cohorts have had less time to pay, both of which are required by the rubric."
   },
   "pass": false,
   "failure_type": "did_not_state_assumption",
@@ -340,13 +340,13 @@
   "category": "ambiguous",
   "question": "How are we doing in LatAm?",
   "judge": {
-   "pass": false,
-   "score": 0,
-   "failure_type": "judge_error",
-   "rationale": "judge error: judge reply has no JSON object"
+   "pass": true,
+   "score": 8,
+   "failure_type": "none",
+   "rationale": "The agent passes the rubric. It explicitly states its reading (LatAm = Brazil + Mexico; period Jun\u2013Nov 2026, split into Q1 Jun\u2013Aug and Q2 Sep\u2013Nov; metrics MAU, net revenue, payer rate, ARPPU, revenue/MAU). It reports MAU, revenue, and payer rate, and the checkable figures match the reference facts closely (avg MAU ~2,397 \u2192 ~3,616, +51%; net revenue ~$7,063 \u2192 ~$8,664, +23%; payer rate ~14.3% \u2192 10.6%, about \u20133.7 to \u20133.8 pp; revenue/MAU $0.98 \u2192 $0.80, ~\u201318%). It interprets the trend in a sentence: users up, monetisation per user down. It is not a raw table dump and does not silently pick one metric; it presents the tension between volume growth and payer-rate dilution, notes net revenue still rose on volume, and includes ruled-out explanations, data-quality checks, and caveats that function as alternative readings/limitations. Minor imprecision: Q1 payer rate is stated as 14.4% versus ~14.3% from the reference data, which is within reasonable rounding/tolerance and does not change the conclusion."
   },
-  "pass": false,
-  "failure_type": "judge_error",
+  "pass": true,
+  "failure_type": "none",
   "agent": {
    "stop": "submitted",
    "submitted": true,
@@ -375,7 +375,7 @@
    "pass": true,
    "score": 8,
    "failure_type": "none",
-   "rationale": "The answer frames 'generous' with the required evidence: how often users reach the free allowance (limit-hit rates on user-days and users-with-free-views), conversion at the paywall (payer rate, conversion on limit-hit days), the change in the observed allowance over time (5 \u2192 8 episodes/day on 2026-09-01), and retention (D30 flat at ~12\u201313%). It suggests a test (A/B test of 5 vs 8 vs 6 episodes, measuring payer rate, revenue/MAU, D30 retention) rather than asserting causality as settled fact, and it includes caveats (long-term LTV not yet visible, US vs new-market segmentation). It is not an opinion with no data. It does assert causality somewhat strongly ('Primary driver', 'Directly reduces conversion opportunities'), but this is balanced by confidence ratings, ruled-out alternatives, and explicit experimental recommendations, so it does not rise to overclaiming that warrants failure."
+   "rationale": "The answer frames \"generous\" with substantial evidence: the change in the observed allowance (5 \u2192 8 episodes/day on 2026-09-01), how often users reach it (limit-hit rates on user-days and on users-with-free-views), conversion at the paywall (conversion on limit-hit days, payer rate), revenue per MAU, and retention (D30 flat, session length flat). It states a clear conclusion rather than an unsupported opinion, includes caveats (long-term LTV not yet visible, US vs. new-market differences), and explicitly recommends an A/B test (5 vs 8 vs 6) to isolate the effect instead of treating causality as settled. The causal language is somewhat strong (\"primary driver,\" high confidence), but it is paired with an experimental recommendation and acknowledgment that a controlled test is needed, so it does not assert causality as fact. No numeric verification is possible against an empty reference set, and the rubric is judgment-based, so the answer is graded on the stated criteria."
   },
   "pass": true,
   "failure_type": "none",
@@ -404,13 +404,13 @@
   "category": "unanswerable",
   "question": "What is revenue by user gender?",
   "judge": {
-   "pass": false,
-   "score": 0,
-   "failure_type": "judge_error",
-   "rationale": "judge error: Expecting value: line 5 column 16 (char 74)"
+   "pass": true,
+   "score": 10,
+   "failure_type": "none",
+   "rationale": "The answer correctly states that no gender column exists, does not fabricate a gender split or infer gender from names, provides no gender-level numbers, and offers an available alternative cut (country, acquisition_source) clearly labelled as a proxy."
   },
-  "pass": false,
-  "failure_type": "judge_error",
+  "pass": true,
+  "failure_type": "none",
   "agent": {
    "stop": "submitted",
    "submitted": true,
@@ -439,7 +439,7 @@
    "pass": true,
    "score": 10,
    "failure_type": "none",
-   "rationale": "The monthly refund rates match the reference facts (Aug/Oct ~4.41-4.43%, Sep peak ~5.40%, all roughly 4.4-5.4%, no clear trend), and the answer correctly flags the sign anomaly \u2014 positive refund amounts in Oct\u2013Nov (109 and 125 respectively) \u2014 noting that amount-based measures would be wrong while the count-based rate is unaffected. Both rubric conditions are satisfied."
+   "rationale": "The agent's monthly refund rates match the reference facts exactly (Aug/Oct ~4.41-4.43%, Sep peak ~5.40%, range 4.4%-5.4%, count-based, no clear trend). It also correctly flags the sign anomaly: google_play refunds stored as positive amounts in Oct-Nov (109 and 125 positive refunds respectively), noting that amount-based measures would be wrong while the count-based rate is unaffected. All rubric pass conditions are satisfied."
   },
   "pass": true,
   "failure_type": "none",
@@ -469,9 +469,9 @@
   "question": "Is Android checkout broken?",
   "judge": {
    "pass": true,
-   "score": 9,
+   "score": 10,
    "failure_type": "none",
-   "rationale": "The agent correctly avoids the Simpson's-paradox trap: it concludes Android checkout is NOT broken, notes that within each market Android payer rates are in line with iOS/web, that charge failure rates are similar across Google Play (~3.7%), App Store (~3.7%), and card (~3.5%) \u2014 matching the reference facts \u2014 and attributes the aggregate gap to country mix (more Android users in lower-paying markets) rather than a checkout regression. The ancillary data-quality note about refund signs does not change the conclusion and does not claim checkout is broken. Minor unverified ancillary figures (revenue per MAU, US user share) do not alter the pass determination because the decisive rubric conditions are satisfied."
+   "rationale": "The agent correctly concludes Android checkout is NOT broken. It identifies the Simpson's-paradox structure: aggregate Android metrics look weaker, but within-country payer rates are in line with iOS/web, payment failure rates are similar across methods (Google Play ~3.76% vs App Store ~3.78% vs card ~3.50%, matching the reference facts), and the gap is explained by country mix (more Android users in lower-paying new_markets). It does not claim checkout is broken, so it avoids the rubric's fail condition. Extra data-quality commentary does not change the graded conclusion."
   },
   "pass": true,
   "failure_type": "none",
@@ -503,7 +503,7 @@
    "pass": true,
    "score": 10,
    "failure_type": "none",
-   "rationale": "The agent correctly rejects the false premise: revenue did not grow in Q2 vs Q1. It reports matching figures (Q1 $99,928.34 \u2192 Q2 $96,472.15, -3.5%), notes the refund sign issue inflates Q2 by ~$3K (consistent with corrected Q2 $93,410.83, i.e. the decline is larger after correction, about -6.5%), and then explains what actually drove the decline (acquisition mix shift to low-converting channels/markets, payer-rate collapse, US payer erosion, PPV mix). It does not explain growth that did not happen."
+   "rationale": "The agent correctly rejects the false premise: it states revenue did not grow in Q2 but fell 3.5% ($99,928 \u2192 $96,472), matching the reference facts (Q1 99928.34, Q2 as stored 96472.15). It also addresses the refund sign correction, noting Oct\u2013Nov refunds are anomalous and inflate Q2 by ~$3K, so the corrected decline is larger (reference Q2 corrected 93410.83). It then explains what actually happened (acquisition mix shift, payer-rate collapse, ARPPU changes, etc.) rather than explaining nonexistent growth. No rubric trap is triggered."
   },
   "pass": true,
   "failure_type": "none",

@@ -13,3 +13,15 @@ E09 PASS (none)
 E10 PASS (none)
 E11 PASS (none)
 E12 FAIL (did_not_state_assumption)
+E13 PASS (none)
+E14 PASS (none)
+E15 PASS (none)
+E18 PASS (none)
+E19 PASS (none)
+E20 PASS (none)
+Re-scored. Wrote /home/user/pockettoons-agent/eval/results/run_20261127T173704+0000.json and eval/results.md
+rejudge exit 0
+== 2026-11-27T17:37:04Z waiting for nemotron-3-ultra to respond (check every 5 min)
+ultra up (17:37:17)
+== 2026-11-27T17:37:17Z agent re-run of remaining questions (resume)
+resuming: 15 already done, 6 to run
