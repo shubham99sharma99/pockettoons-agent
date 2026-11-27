@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-11-27T16:26:53+00:00",
+  "run_at": "2026-11-27T16:44:25+00:00",
   "model": "nvidia/nemotron-3-ultra-550b-a55b",
   "provider": "nim",
   "judge_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
@@ -54,8 +54,8 @@
   "infra_failures": 3,
   "median_latency_s": 177.59,
   "median_tool_calls": 10,
-  "median_input_tokens": 88312,
-  "median_output_tokens": 3938,
+  "median_input_tokens": 82325.5,
+  "median_output_tokens": 3895.0,
   "results": [
     {
       "id": "E01",
@@ -804,22 +804,17 @@
       "agent": {
         "stop": "api_error",
         "submitted": false,
-        "tool_calls": 23,
-        "sql_calls": 13,
-        "turns": 23,
-        "latency_s": 1831.67,
-        "usage": {
-          "input_tokens": 476719,
-          "output_tokens": 18081,
-          "cache_read_input_tokens": 0,
-          "cache_creation_input_tokens": 0
-        },
+        "tool_calls": 0,
+        "sql_calls": 0,
+        "turns": 1,
+        "latency_s": 908.56,
+        "usage": {},
         "error": "APITimeoutError: Request timed out."
       },
       "headline": null,
       "headline_value": null,
       "answer_markdown": null,
-      "wall_s": 1831.7
+      "wall_s": 909.1
     }
   ]
 }

@@ -85,7 +85,9 @@ JUDGE_SCHEMA = {
 JUDGE_SYSTEM = """You grade answers from an analytics agent against a rubric and reference facts
 computed from the same database. Be strict about numbers (they must match the facts within the
 rubric's tolerance or a clearly stated alternative definition) and about traps named in the rubric.
-Do not reward length. If the answer passes, failure_type is "none"."""
+The agent ran its own queries, so numbers that are not in the reference facts are not wrong for that
+reason alone; grade what the rubric asks about. Do not reward length. If the answer passes,
+failure_type is "none"."""
 
 
 def _judge_prompt(question: str, rubric: str, facts: dict | None, answer_md: str) -> str:
@@ -114,16 +116,19 @@ def parse_verdict(text: str) -> dict:
 
 
 def _judge_nim(prompt: str, client=None, attempts: int = 3) -> dict:
-    """Free-tier judges sometimes return empty content (reasoning used the token budget) or
-    malformed JSON; ask again up to `attempts` times before reporting a judge_error."""
+    """Free-tier judges sometimes return malformed JSON, or spend the whole token budget on
+    hidden reasoning and return no content. Ask again up to `attempts` times; the last attempt
+    turns reasoning off (Nemotron's chat-template switch) so it always produces a verdict."""
     from agent.nim import NimLLM
-    llm = NimLLM(model=JUDGE_MODEL, max_tokens=4000, temperature=0.0, client=client)
+    llm = NimLLM(model=JUDGE_MODEL, max_tokens=int(os.environ.get("PT_JUDGE_MAX_TOKENS", "12000")),
+                 temperature=0.0, client=client)
     schema_hint = (f"Reply with only a JSON object, no prose, with keys: pass (boolean), score (integer 0-10), "
                    f"failure_type (one of {', '.join(FAILURE_TYPES)}), rationale (string).")
+    msgs = [{"role": "system", "content": JUDGE_SYSTEM + "\n\n" + schema_hint}, {"role": "user", "content": prompt}]
     err: Exception | None = None
-    for _ in range(attempts):
-        resp = llm.complete([{"role": "system", "content": JUDGE_SYSTEM + "\n\n" + schema_hint},
-                             {"role": "user", "content": prompt}])
+    for i in range(attempts):
+        kw = {"extra_body": {"chat_template_kwargs": {"enable_thinking": False}}} if i == attempts - 1 else {}
+        resp = llm.complete(msgs, **kw)
         try:
             return parse_verdict(resp.choices[0].message.content or "")
         except ValueError as e:   # json.JSONDecodeError is a ValueError

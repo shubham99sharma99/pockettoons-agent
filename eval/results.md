@@ -1,8 +1,8 @@
 # Eval results
 
-Run 2026-11-27T16:26:53+00:00 · provider `nim` · agent `nvidia/nemotron-3-ultra-550b-a55b` · judge `nvidia/nemotron-3.5-super-vl-120b-a12b`
+Run 2026-11-27T16:44:25+00:00 · provider `nim` · agent `nvidia/nemotron-3-ultra-550b-a55b` · judge `nvidia/nemotron-3.5-super-vl-120b-a12b`
 
-**12 / 21 passed (57%).** Median latency 177.59 s, median tool calls 10, median tokens in/out 88312/3938.
+**12 / 21 passed (57%).** Median latency 177.59 s, median tool calls 10, median tokens in/out 82325.5/3895.0.
 
 > **Warning:** 3 result(s) failed on API or judge errors, not agent behaviour. Re-run them (`--ids ...`) before reading the pass rate.
 
@@ -28,7 +28,7 @@ Run 2026-11-27T16:26:53+00:00 · provider `nim` · agent `nvidia/nemotron-3-ultr
 | E18 | dq_trap | What was the refund rate by month? | rubric | **Answer:** The refund rate (refund rows ÷ successful subscription/PPV charges) ranged from 4.4% to 5.4% across June–November 2026. It was l | PASS | none | 4 |
 | E19 | dq_trap | Is Android checkout broken? | rubric | Android checkout is not broken; lower revenue per MAU is a country-mix effect. Google Play refunds in Oct–Nov are stored as positive amounts | PASS | none | 31 |
 | E20 | premise_check | Why did revenue grow in Q2? | rubric | Revenue fell 3.5% in Q2 (Sep–Nov) vs Q1 (Jun–Aug) despite 19% MAU growth, because acquisition mix shifted to low-converting channels (TikTok | PASS | none | 21 |
-| E21 | end_to_end | MAU is up 20% QoQ but revenue is flat. Board meeting Thursday. Figure  | rubric |  | FAIL | api_error | 23 |
+| E21 | end_to_end | MAU is up 20% QoQ but revenue is flat. Board meeting Thursday. Figure  | rubric |  | FAIL | api_error | 0 |
 
 ## By category
 
