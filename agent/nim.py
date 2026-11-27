@@ -21,7 +21,7 @@ from types import SimpleNamespace as NS
 from typing import Any
 
 NIM_BASE_URL = os.environ.get("PT_NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
-NIM_DEFAULT_MODEL = os.environ.get("PT_NIM_MODEL", "meta/llama-3.3-70b-instruct")
+NIM_DEFAULT_MODEL = os.environ.get("PT_NIM_MODEL", "nvidia/nemotron-3-ultra-550b-a55b")
 NIM_KEY_ENV = "NVIDIA_API_KEY"
 
 _THINK = re.compile(r"<think>.*?</think>\s*", re.DOTALL)

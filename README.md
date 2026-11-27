@@ -96,7 +96,7 @@ and terms). Use it to iterate cheaply; compare against a Claude run before choos
 # .env
 PT_PROVIDER=nim
 NVIDIA_API_KEY=nvapi-...                       # from build.nvidia.com
-PT_NIM_MODEL=meta/llama-3.3-70b-instruct       # any NIM model that supports tool calling
+PT_NIM_MODEL=nvidia/nemotron-3-ultra-550b-a55b       # any NIM model that supports tool calling
 ```
 
 `agent/nim.py` translates the conversation to chat-completions format and back, so the loop,
