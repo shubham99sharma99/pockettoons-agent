@@ -618,5 +618,52 @@
   "headline_value": null,
   "answer_markdown": "**Answer:** In Q2 (Sep\u2013Nov 2026), **$2,385.90** of PPV revenue came from paywall unlocks (standard-tier episodes at $0.99 each). The remaining $6,059.55 came from premium episodes at $1.99 each. (Q1)\n\n**How I measured it:**  \n- **Period:** Q2 = 2026-09-01 to 2026-11-30 (per the metric catalog).  \n- **Source:** `transactions` table, filtered to `type = 'ppv'`, `status = 'success'`.  \n- **Split logic (per the analytical definition `ppv_revenue_split`):**  \n  - $0.99 charges \u2192 paywall unlocks (standard-tier episodes beyond the daily free allowance).  \n  - $1.99 charges \u2192 premium episodes.  \n- **Cross-check:** PPV views in `content_views` joined to `content_catalog.content_tier` show 2,405 standard-tier and 3,039 premium-tier PPV views in Q2, closely matching the 2,410 and 3,045 successful transactions at each price point (Q2).\n\n**Checks:**  \n- Verified the price-point split against the documented PPV pricing ($0.99 standard, $1.99 premium).  \n- Cross-checked transaction counts with PPV view counts by content tier; the small gaps (5 and 6) are within expected timing/attribution differences.\n\n**Confidence:** High \u2014 the split is directly observable from transaction amounts and aligns with the content-tier view data.",
   "wall_s": 717.5
+ },
+ {
+  "id": "E08",
+  "category": "time",
+  "question": "How did PPV revenue change from Q1 to Q2?",
+  "numeric": {
+   "pass": false,
+   "truth": -0.28335955359367737,
+   "candidates": [
+    0.28300000000000003,
+    11.8,
+    8.4,
+    1.0,
+    2.0,
+    6.9
+   ],
+   "tol": {
+    "abs": 0.01
+   }
+  },
+  "judge": {
+   "pass": true,
+   "score": 10,
+   "failure_type": "none",
+   "rationale": "The answer states the overall PPV revenue direction (gross fell ~28.3%) and, crucially, separates the two components required by the rubric: unlocks/standard-tier fell sharply (about -64%) while premium grew (about +19%). These match the reference facts (unlock_change \u2248 -0.6438; premium_change \u2248 +0.1913) in both direction and size. It does not state only the total, nor does it misattribute the cause; it correctly frames the decline as driven by the unlock/standard drop partially offset by premium growth. The Q1/Q2 split (pre/post 2026-09-01) aligns with the reference facts' date filter."
+  },
+  "pass": false,
+  "failure_type": "wrong_number",
+  "agent": {
+   "stop": "submitted",
+   "submitted": true,
+   "tool_calls": 16,
+   "sql_calls": 9,
+   "turns": 16,
+   "latency_s": 439.77,
+   "usage": {
+    "input_tokens": 157301,
+    "output_tokens": 11261,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+   },
+   "error": null
+  },
+  "headline": "Gross PPV revenue fell 28.3% ($11.8k \u2192 $8.4k) from Q1 to Q2; net PPV revenue was flat (~$6.9k) but distorted by a refund sign bug.",
+  "headline_value": null,
+  "answer_markdown": "**Answer:** Gross PPV revenue fell 28.3% from $11,785 in Q1 (Jun\u2013Aug) to $8,445 in Q2 (Sep\u2013Nov), while net PPV revenue (after refunds) was essentially flat at ~$6,880 vs ~$6,920. (Q2, Q17)\n\n## What the numbers say\n| Metric | Q1 (Jun\u2013Aug) | Q2 (Sep\u2013Nov) | Change |\n|--------|--------------|--------------|--------|\n| Gross PPV revenue | $11,784.78 | $8,445.45 | \u201328.3% |\n| PPV transactions | 9,322 | 5,455 | \u201341.5% |\n| Refunds (PPV-related) | \u2013$4,903.30 | \u2013$1,523.66 | \u201369% |\n| **Net PPV revenue** | **$6,881.48** | **$6,921.79** | **+0.6%** |\n| Avg revenue / PPV txn | $1.26 | $1.55 | +23% |\n\n## Root causes\n| Cause | What changed | Evidence | Impact | Confidence |\n|-------|--------------|----------|--------|------------|\n| Volume drop | PPV transactions fell 41.5% (9,322 \u2192 5,455) | Q2, Q14 | \u2013$4.9k gross | High |\n| Mix shift to Premium | Standard-tier PPV views \u201364% (6,754 \u2192 2,405); Premium-tier PPV views +19% (2,555 \u2192 3,039) | Q15 | Partially offsets volume drop (Premium is $1.99 vs $0.99) | High |\n| Refund anomaly in Q1 | Q1 refunds were 3.2\u00d7 Q2; DQ check shows google_play refunds in Oct\u2013Nov stored as positive (wrong sign), which would understate Q2 refunds | Q6, Q17 | Makes Q1 net look worse / Q2 net look better than reality | Medium |\n\n## Bridge (gross PPV revenue, $)\n| Step | Points | Cause |\n|------|--------|-------|\n| Q1 gross | 11,785 | \u2014 |\n| Volume (txn count \u201341.5%) | \u20134,895 | Fewer PPV purchases |\n| Mix (Premium share \u2191) | +1,556 | Higher $/txn ($1.26 \u2192 $1.55) |\n| Q2 gross | 8,445 | \u2014 |\n\n## Ruled out\n- Price change: list prices are fixed at $0.99 (standard) and $1.99 (premium) (Q7)\n- Seasonality in refunds: the sharp Q1\u2192Q2 refund drop coincides with a known sign-convention bug for google_play refunds in Oct\u2013Nov (Q6)\n\n## Data issues found\n- **Refund sign bug**: google_play refunds in Oct\u2013Nov 2026 are stored as positive amounts (Q6). This understates Q2 refunds by ~$200\u2013300 (estimated from 234 refunds \u00d7 ~$1), making Q2 net PPV revenue appear ~3\u20134% higher than reality.\n\n## Recommendations\n| Action | Owner | What's at stake | How to measure |\n|--------|-------|-----------------|----------------|\n| Fix refund sign convention for google_play | Engineering / Finance | Accurate net revenue reporting; avoids overstating Q2 by ~$200\u2013300 | Refund amount_usd < 0 for all payment_methods (DQ check passes) |\n| Investigate Standard-tier PPV volume collapse | Product / Growth | Standard PPV is the larger volume driver; 64% drop needs diagnosis (paywall UI, free-episode limit changes, content mix) | Standard PPV views / MAU by month |\n| Monitor Premium-tier PPV growth | Product | Premium PPV grew 19% in views and 13% in revenue despite overall decline | Premium PPV revenue trend |\n\n## Caveats and open questions\n- Net PPV revenue comparison is distorted by the refund sign bug; true Q2 net is likely ~$6,600\u20136,700 (still roughly flat vs Q1).\n- The analysis covers Jun\u2013Nov 2026 (the available data window). Calendar Q1/Q2 would be Jan\u2013Mar / Apr\u2013Jun; this answer uses the data's first and second 3-month blocks.\n- No data on *why* Standard PPV views collapsed (e.g., free-episode limit changes, content releases, paywall experiments).",
+  "wall_s": 473.9
  }
 ]
