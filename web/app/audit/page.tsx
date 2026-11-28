@@ -84,7 +84,7 @@ export default function AuditPage() {
     <>
       <h1>Audit log</h1>
       <p className="muted">Every agent question, SQL query and eval run that reached the API: when, from which client (a salted hash, never the IP),
-        what ran and how it ended. Stored in <code>data/audit.sqlite</code>, separate from the analytics database.</p>
+        what ran and how it ended. Stored in its own small SQLite file, separate from the analytics database. On the free Render server it starts empty after each redeploy.</p>
 
       {err && <p className="error">{err}</p>}
 
