@@ -21,7 +21,9 @@ COPY eval/ eval/
 COPY dbt/models/ dbt/models/
 COPY dotenv_lite.py cli.py ./
 COPY --from=build /app/data/pockettoons.duckdb data/pockettoons.duckdb
-RUN chown -R app /app/eval
+# writable state (audit log) lives outside the read-only data/ folder
+RUN chown -R app /app/eval && mkdir -p /app/var && chown app /app/var
+ENV PT_AUDIT_DB=/app/var/audit.sqlite
 USER app
 EXPOSE 8000
 CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT}"]

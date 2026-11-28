@@ -304,4 +304,7 @@ def audit_log(kind: str | None = None, status: str | None = None, q: str | None 
     if not allowed:
         raise HTTPException(404, "The audit log is not exposed. Set PT_EXPOSE_AUDIT=1 in .env (local only) "
                                  "or send X-Admin-Token.")
-    return audit.read(kind, status, q, limit, before_id)
+    try:
+        return audit.read(kind, status, q, limit, before_id)
+    except Exception as e:  # noqa: BLE001 - e.g. the audit file's folder is not writable
+        raise HTTPException(503, f"Audit log unavailable: {type(e).__name__}: {str(e)[:200]}")
