@@ -15,7 +15,7 @@ html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5
 a { color: var(--accent); text-decoration: none; }
 header.top { display: flex; gap: 20px; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
 header.top .brand { font-weight: 650; }
-header.top nav { display: flex; gap: 14px; }
+header.top nav { display: flex; gap: 6px 14px; flex-wrap: wrap; }
 header.top nav a { color: var(--muted); }
 header.top nav a.active { color: var(--ink); font-weight: 600; }
 main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; }
@@ -47,3 +47,19 @@ table.data th, table.data td { border-bottom: 1px solid var(--line); padding: 7p
 .notice { background: var(--accent-soft); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
 .error { background: var(--bad-soft); color: var(--bad); border-radius: 8px; padding: 10px 12px; }
 details summary { cursor: pointer; color: var(--muted); }
+
+/* chart series (validated categorical order, light / dark steps) */
+:root { --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --grid: #ecebe6; }
+@media (prefers-color-scheme: dark) { :root { --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --grid: #2c2c29; } }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 6px 9px; font-size: 12.5px; box-shadow: 0 4px 14px rgba(0,0,0,.12); white-space: nowrap; z-index: 2; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); margin: 2px 0 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.kpi .d { font-size: 12.5px; color: var(--muted); }
+.cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; }
+.bars .b { display: grid; grid-template-columns: 110px 1fr auto; gap: 10px; align-items: center; padding: 4px 0; font-size: 13px; }
+.bars .track { height: 14px; }
+.bars .fill { height: 14px; border-radius: 0 4px 4px 0; background: var(--s1); }
+.bars .b:hover .fill { filter: brightness(1.12); }

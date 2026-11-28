@@ -9,6 +9,9 @@ Endpoints
   GET  /eval/results   latest eval summary
   POST /eval/run       start an eval run in the background      (rate limited, optional admin token)
   GET  /eval/status    status of the background eval run
+  GET  /dashboard      KPI and trend data for the Dashboard page
+  GET  /schema/relations  keys, relationships (with integrity checks) and dbt lineage
+  GET  /audit          audit log of /ask, /query and /eval/run   (PT_EXPOSE_AUDIT=1 or admin token)
 
 Config (environment)
   ANTHROPIC_API_KEY       required for /ask and /eval/run (PT_PROVIDER=anthropic, the default)
@@ -16,7 +19,9 @@ Config (environment)
   ALLOWED_ORIGINS         comma-separated CORS origins (your Vercel domain)
   ALLOWED_ORIGIN_REGEX    optional regex, e.g. https://pockettoons-.*\\.vercel\\.app for previews
   ASK_RATE_PER_MIN        per-IP /ask limit (default 4); ASK_RATE_PER_DAY global daily cap (default 200)
-  EVAL_ADMIN_TOKEN        if set, /eval/run requires header X-Admin-Token
+  EVAL_ADMIN_TOKEN        if set, /eval/run requires header X-Admin-Token (it also unlocks /audit)
+  PT_EXPOSE_AUDIT         1 = serve /audit without a token (local only)
+  PT_AUDIT_DB             audit log file (default data/audit.sqlite)
 """
 from __future__ import annotations
 
@@ -42,6 +47,7 @@ from dotenv_lite import load_env  # noqa: E402
 load_env(ROOT / ".env")
 
 from agent import db, semantic  # noqa: E402
+from api import audit, insights  # noqa: E402
 from agent import tools as T  # noqa: E402
 from agent.agent import DEFAULT_MODEL, KEY_ENV, PROVIDER, AnalyticsAgent, llm_configured  # noqa: E402
 
@@ -133,13 +139,21 @@ class QueryIn(BaseModel):
 
 @app.post("/query")
 def query(body: QueryIn, request: Request):
-    query_limiter.check(client_ip(request))
+    ip = client_ip(request)
+    try:
+        query_limiter.check(ip)
+    except HTTPException:
+        audit.record("query", "rate_limited", body.sql, ip)
+        raise
     try:
         res = db.execute(body.sql)
     except db.SQLGuardError as e:
+        audit.record("query", "rejected", body.sql, ip, error=str(e))
         raise HTTPException(400, str(e))
     if res.error:
+        audit.record("query", "error", body.sql, ip, res.elapsed_ms, error=res.error)
         raise HTTPException(400, res.error)
+    audit.record("query", "ok", body.sql, ip, res.elapsed_ms, rows=res.row_count, truncated=res.truncated)
     return res.to_dict()
 
 
@@ -156,12 +170,20 @@ def make_agent() -> AnalyticsAgent:  # overridden in tests
 
 @app.post("/ask")
 async def ask(body: AskIn, request: Request):
-    require_key()
-    ask_limiter.check(client_ip(request))
+    ip = client_ip(request)
+    try:
+        require_key()
+        ask_limiter.check(ip)
+    except HTTPException as e:
+        audit.record("ask", "rate_limited" if e.status_code == 429 else "rejected", body.question, ip,
+                     error=e.detail)
+        raise
     loop = asyncio.get_running_loop()
     queue: asyncio.Queue = asyncio.Queue()
+    recorder = audit.AskRecorder(body.question, ip)
 
     def sink(ev):
+        recorder.on_event(ev)   # logs the run when "done" arrives, even if the client left
         loop.call_soon_threadsafe(queue.put_nowait, ev)
 
     def work():
@@ -255,4 +277,31 @@ def eval_run(body: EvalRunIn, request: Request, x_admin_token: str | None = Head
         _eval_state["finished_at"] = time.time()
 
     threading.Thread(target=work, daemon=True).start()
+    audit.record("eval_run", "ok", f"eval run: {', '.join(body.ids) if body.ids else 'all questions'}",
+                 client_ip(request), ids=body.ids)
     return {"started": True, "ids": body.ids}
+
+
+# --------------------------------------------------------------------------- #
+# Dashboard, ER diagram, audit log
+# --------------------------------------------------------------------------- #
+@app.get("/dashboard")
+def dashboard():
+    return insights.dashboard()
+
+
+@app.get("/schema/relations")
+def schema_relations():
+    return insights.relations()
+
+
+@app.get("/audit")
+def audit_log(kind: str | None = None, status: str | None = None, q: str | None = None,
+              limit: int = 100, before_id: int | None = None,
+              x_admin_token: str | None = Header(default=None)):
+    token = os.environ.get("EVAL_ADMIN_TOKEN")
+    allowed = os.environ.get("PT_EXPOSE_AUDIT") == "1" or (token and x_admin_token == token)
+    if not allowed:
+        raise HTTPException(404, "The audit log is not exposed. Set PT_EXPOSE_AUDIT=1 in .env (local only) "
+                                 "or send X-Admin-Token.")
+    return audit.read(kind, status, q, limit, before_id)
