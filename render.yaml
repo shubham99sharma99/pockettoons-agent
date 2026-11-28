@@ -8,15 +8,19 @@ services:
     healthCheckPath: /health
     envVars:
       - key: PT_PROVIDER
-        value: anthropic       # or "nim" to serve /ask from NVIDIA NIM
-      - key: ANTHROPIC_API_KEY
-        sync: false            # set in the Render dashboard, never committed
+        value: nim             # NVIDIA NIM; set "anthropic" (and ANTHROPIC_API_KEY) to use Claude
+      - key: PT_NIM_MODEL
+        value: nvidia/nemotron-3-ultra-550b-a55b
+      - key: PT_JUDGE_MODEL
+        value: nvidia/nemotron-3.5-super-vl-120b-a12b   # separate NIM quota for eval judging
       - key: NVIDIA_API_KEY
-        sync: false            # only needed when PT_PROVIDER=nim
+        sync: false            # set in the Render dashboard, never committed
+      - key: ANTHROPIC_API_KEY
+        sync: false            # only needed when PT_PROVIDER=anthropic
       - key: ALLOWED_ORIGINS
-        value: https://YOUR-APP.vercel.app
+        value: http://localhost:3000   # add your custom domain here if you use one
       - key: ALLOWED_ORIGIN_REGEX
-        value: ""              # optional, e.g. https://pockettoons-.*\.vercel\.app for preview URLs
+        value: https://pockettoons[a-z0-9-]*\.vercel\.app   # the Vercel production and preview URLs
       - key: ASK_RATE_PER_MIN
         value: "4"
       - key: ASK_RATE_PER_DAY
@@ -26,6 +30,6 @@ services:
       - key: MOTHERDUCK_TOKEN
         sync: false            # read-only (read scaling) token; set in the dashboard
       - key: PT_MD_DATABASE
-        value: pockettoons     # leave empty to use the DuckDB file baked into the image
+        value: ""              # empty = the DuckDB file baked into the image; "pockettoons" + MOTHERDUCK_TOKEN for MotherDuck
       - key: PT_EFFORT
         value: high

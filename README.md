@@ -115,10 +115,11 @@ data-quality traps; the eval shows by how much.
 2. Render → New → Blueprint → pick the repo. `render.yaml` creates a Docker web
    service. The image generates the data and runs `dbt build` at build time, so the
    DuckDB file is baked in and opened read-only.
-3. In the service's Environment tab set `ANTHROPIC_API_KEY` (or `PT_PROVIDER=nim` and `NVIDIA_API_KEY`), set `ALLOWED_ORIGINS`
-   to your Vercel URL (e.g. `https://pockettoons.vercel.app`), optionally
-   `ALLOWED_ORIGIN_REGEX` for preview URLs, and `EVAL_ADMIN_TOKEN` to protect
-   `POST /eval/run`.
+3. The blueprint defaults to NVIDIA NIM (`PT_PROVIDER=nim`): set `NVIDIA_API_KEY` in the
+   service's Environment tab (or switch to `anthropic` and set `ANTHROPIC_API_KEY`).
+   `ALLOWED_ORIGIN_REGEX` already allows `https://pockettoons*.vercel.app`; add any custom
+   domain to `ALLOWED_ORIGINS`. Set `EVAL_ADMIN_TOKEN` to protect `POST /eval/run` and to
+   read `GET /audit`. Leave `PT_EXPOSE_GOLDEN` and `PT_EXPOSE_AUDIT` unset in production.
 4. Check `https://<service>.onrender.com/health`. Free instances sleep when idle;
    the first request after a sleep takes ~30-60 s.
 
