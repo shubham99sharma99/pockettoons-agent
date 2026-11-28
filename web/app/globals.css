@@ -63,3 +63,13 @@ details summary { cursor: pointer; color: var(--muted); }
 .bars .track { height: 14px; }
 .bars .fill { height: 14px; border-radius: 0 4px 4px 0; background: var(--s1); }
 .bars .b:hover .fill { filter: brightness(1.12); }
+
+/* API server status (free Render instances sleep when idle) */
+.server-status { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.server-status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.server-status .dot.ready { background: var(--ok); }
+.server-status .dot.asleep, .server-status .dot.down { background: var(--bad); }
+.server-status .dot.waking, .server-status .dot.checking { background: #eda100; animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .server-status .dot { animation: none !important; } }
+button.small { padding: 3px 10px; font-size: 12.5px; }

@@ -119,7 +119,7 @@ data-quality traps; the eval shows by how much.
    service's Environment tab (or switch to `anthropic` and set `ANTHROPIC_API_KEY`).
    `ALLOWED_ORIGIN_REGEX` already allows `https://pockettoons*.vercel.app`; add any custom
    domain to `ALLOWED_ORIGINS`. Set `EVAL_ADMIN_TOKEN` to protect `POST /eval/run` and to
-   read `GET /audit`. Leave `PT_EXPOSE_GOLDEN` and `PT_EXPOSE_AUDIT` unset in production.
+   read `GET /audit`. The blueprint sets `PT_EXPOSE_AUDIT=1`, so the audit log is public to anyone with the URL; remove it to require the token. Leave `PT_EXPOSE_GOLDEN` unset in production.
 4. Check `https://<service>.onrender.com/health`. Free instances sleep when idle;
    the first request after a sleep takes ~30-60 s.
 

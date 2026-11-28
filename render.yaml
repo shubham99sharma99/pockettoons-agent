@@ -25,6 +25,8 @@ services:
         value: "4"
       - key: ASK_RATE_PER_DAY
         value: "200"
+      - key: PT_EXPOSE_AUDIT
+        value: "1"             # audit log readable without a token (personal project; anyone with the URL can read it)
       - key: EVAL_ADMIN_TOKEN
         sync: false            # protects POST /eval/run (costs API credits)
       - key: MOTHERDUCK_TOKEN
